@@ -39,6 +39,24 @@ const deleteAnswer = async (req, res) => {
   }
 };
 
+const deleteAllAnswersOfUser = async (req, res) => {
+  try {
+    const userId = req.query.user;
+    console.log(userId);
+
+    const deletedAnswers = await Answer.deleteMany({ user: userId });
+
+    if (deletedAnswers.deletedCount > 0) {
+      res.status(200).json({ message: "All answers deleted successfully." });
+    } else {
+      res.status(404).json({ message: "No answers found for this user." });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error deleting Answer" });
+  }
+};
+
 const getAnswersByCourseId = async (req, res) => {
   try {
     const courseId = new mongoose.Types.ObjectId(req.query.course);
@@ -82,4 +100,5 @@ module.exports = {
   createAnswer,
   deleteAnswer,
   getAnswersByCourseId,
+  deleteAllAnswersOfUser,
 };
