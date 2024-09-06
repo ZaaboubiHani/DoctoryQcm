@@ -2,15 +2,11 @@ const Note = require("../models/note");
 const mongoose = require("mongoose");
 const createNote = async (req, res) => {
   try {
-    await Note.deleteMany({
-      user: req.user.userId,
-      question: req.body.question,
-    });
-
     const newNote = new Note({
       user: req.user.userId,
       ...req.body,
     });
+    
 
     const createdNote = await newNote.save();
 

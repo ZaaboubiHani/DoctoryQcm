@@ -1,6 +1,6 @@
 const path = require("path");
 
-const downloadPdf = (req, res) => {
+const downloadApk = (req, res) => {
   try {
     const filePath = path.join(__dirname, "..", "files", "dctory_qcm_1.2.5.apk");
     res.download(filePath, "dctory_qcm_1.2.5.apk", (err) => {
@@ -26,5 +26,5 @@ const downloadPdf = (req, res) => {
 };
 
 module.exports = {
-  downloadPdf,
+  downloadApk,
 };

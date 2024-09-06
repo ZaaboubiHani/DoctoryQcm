@@ -50,12 +50,10 @@ const getResidencyQuestions = async (req, res) => {
     }).select("-createdAt -updatedAt");
     let result = [];
     for (const question of residencyQuestions) {
-    
       const note = await Note.findOne({
         user: userId,
         residencyQuestion: question._id,
       }).select("note");
-
 
       result.push({
         question: question,
