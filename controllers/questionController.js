@@ -91,35 +91,53 @@ const getQuestionsWithDetails = async (req, res) => {
         .status(400)
         .json({ error: "Missing course id in request query" });
     }
-    const questions = await Question.find({ course: course }).select(
-      "-updatedAt -module -category -course"
-    )
-    .sort({ createdAt: -1 });
-    let result = [];
-    for (const question of questions) {
-      const isFavourite = await Favourite.exists({
-        user: userId,
-        question: question._id,
-      });
-      const note = await Note.findOne({
-        user: userId,
-        question: question._id,
-      }).select("note");
-      let isFav;
+    // Use aggregation to get questions with notes and isFavourite status
+    const courseId = new mongoose.Types.ObjectId(course);
+    const questions = await Question.aggregate([
+      {
+        $match: { course: courseId },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $lookup: {
+          from: "favourites",
+          localField: "_id",
+          foreignField: "question",
+          as: "favourites",
+          pipeline: [
+            { $match: { user: new mongoose.Types.ObjectId(userId) } },
+            { $project: { _id: 1 } }, // Only keep necessary fields to optimize
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "notes",
+          localField: "_id",
+          foreignField: "question",
+          as: "notes",
+          pipeline: [
+            { $match: { user: new mongoose.Types.ObjectId(userId) } },
+            { $project: { _id: 1, note: 1 } }, // Only keep the "note" field
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          text: 1, // Include other necessary question fields
+          choices: 1, // Include other necessary question fields
+          createdAt: 1,
+          correctAnswers: 1,
+          isFavourite: { $gt: [{ $size: "$favourites" }, 0] }, // Check if there are any favourite records
+          note: { $arrayElemAt: ["$notes", 0] }, // Get the first note if it exists
+        },
+      },
+    ]);
 
-      if (!isFavourite) {
-        isFav = false;
-      } else if (isFavourite) {
-        isFav = true;
-      }
-
-      result.push({
-        question: question,
-        isFavourite: isFav,
-        note: note,
-      });
-    }
-    res.status(200).json(result);
+    res.status(200).json(questions);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error fetching Question" });

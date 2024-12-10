@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const mongoosePaginate = require("mongoose-paginate-v2");
 const questionSchema = new mongoose.Schema(
   {
     category: {
@@ -42,7 +42,7 @@ const questionSchema = new mongoose.Schema(
   },
   { versionKey: false, timestamps: true }
 );
-
+questionSchema.plugin(mongoosePaginate);
 const Question = mongoose.model("Question", questionSchema);
 
 module.exports = Question;

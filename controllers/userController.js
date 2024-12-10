@@ -63,13 +63,12 @@ const loginUser = async (req, res) => {
             message: "Votre compte n'est pas encore activé",
           });
         }
-        console.log(req.body.deviceToken);
-        if (user.deviceToken !== null && user.deviceToken !== undefined && user.deviceToken !== "" && user.deviceToken !== req.body.deviceToken) {
-          return res.status(400).json({
-            success: false,
-            message: "Connexion impossible : Ce compte est déjà utilisé sur un autre appareil. \nVeuillez contacter ce numéro : 06 71 84 68 73",
-          });
-        }
+        // if (user.deviceToken !== null && user.deviceToken !== undefined && user.deviceToken !== "" && user.deviceToken !== req.body.deviceToken) {
+        //   return res.status(400).json({
+        //     success: false,
+        //     message: "Connexion impossible : Ce compte est déjà utilisé sur un autre appareil. \nVeuillez contacter ce numéro : 06 71 84 68 73",
+        //   });
+        // }
         const token = generateToken(user.id, user.isAdmin);
         res.status(200).json({
           message: "Connexion réussie",
@@ -97,16 +96,16 @@ const loginUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
-    const isAdmin = req.user.isAdmin;
+    // const isAdmin = req.user.isAdmin;
     if (!userId) {
       return res.status(400).json({
         success: false,
         message: "Identifiant utilisateur manquant",
       });
     }
-    if (!isAdmin && req.body.isValidated) {
-      return res.status(401).json({ success: false, message: "non autorisé" });
-    }
+    // if (!isAdmin && req.body.isValidated) {
+    //   return res.status(401).json({ success: false, message: "non autorisé" });
+    // }
     let userData = {
       email: req.body.email,
       name: req.body.name,
@@ -154,7 +153,7 @@ const getMe = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 1600 } = req.query;
     const searchText = req.query.text;
 
     let query = {

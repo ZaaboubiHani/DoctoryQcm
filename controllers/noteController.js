@@ -1,5 +1,6 @@
 const Note = require("../models/note");
 const mongoose = require("mongoose");
+
 const createNote = async (req, res) => {
   try {
     const newNote = new Note({
@@ -16,6 +17,7 @@ const createNote = async (req, res) => {
     res.status(500).json({ error: "Error creating Note" });
   }
 };
+
 const updateNote = async (req, res) => {
   const noteId = req.params.id;
   try {
@@ -65,9 +67,36 @@ const getNote = async (req, res) => {
     res.status(500).json({ error: "Error fetching Note" });
   }
 };
+const deleteNote = async (req, res) => {
+  const noteId = req.params.id;
+
+  try {
+    // Find the note by ID and populate the user field
+    const note = await Note.findById(noteId).populate("user");
+
+    // Check if the note exists
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    // Check if the note belongs to the current user
+    if (note.user.id !== req.user.userId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Delete the note
+    await Note.findByIdAndDelete(noteId);
+
+    res.status(200).json({ message: "Note deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error deleting Note" });
+  }
+};
 
 module.exports = {
   createNote,
   updateNote,
   getNote,
+  deleteNote, // Include the deleteNote method in the module exports
 };
