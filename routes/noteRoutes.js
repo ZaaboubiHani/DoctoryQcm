@@ -8,5 +8,6 @@ const userJwt = require("../middlewares/userJwt");
 router.post("/", userJwt, noteController.createNote);
 router.get("/", userJwt, noteController.getNote);
 router.put("/:id", userJwt,noteController.updateNote);
+router.delete("/:id", userJwt,noteController.deleteNote);
 
 module.exports = router;
