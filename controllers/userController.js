@@ -102,16 +102,13 @@ const loginUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
-    // const isAdmin = req.user.isAdmin;
     if (!userId) {
       return res.status(400).json({
         success: false,
         message: "Identifiant utilisateur manquant",
       });
     }
-    // if (!isAdmin && req.body.isValidated) {
-    //   return res.status(401).json({ success: false, message: "non autorisé" });
-    // }
+   
     let userData = {
       email: req.body.email,
       name: req.body.name,
