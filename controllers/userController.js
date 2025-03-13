@@ -212,7 +212,6 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Find the user first
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -221,7 +220,6 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Delete related data
     await Promise.all([
       Answer.deleteMany({ user: userId }),
       Note.deleteMany({ user: userId }),
@@ -230,7 +228,6 @@ const deleteUser = async (req, res) => {
       Favourite.deleteMany({ user: userId }),
     ]);
 
-    // Delete the user
     await User.findByIdAndDelete(userId);
 
     res.status(200).json({
