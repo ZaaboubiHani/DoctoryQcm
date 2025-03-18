@@ -11,12 +11,20 @@ const getStats = async (req, res) => {
     const modules = await Module.countDocuments();
     const courses = await Course.countDocuments();
     const questions = await Question.countDocuments();
-    res.status(200).json({ categories, modules, courses, questions });
+    res.status(200).json({
+      success: true,
+      data: { categories, modules, courses, questions },
+      categories,
+      modules,
+      courses,
+      questions,//todo: this will be removed in the future
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error Getting Stats" });
   }
 };
+
 const getNumberOfFavouriteQuestionsPerCategory = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
@@ -211,7 +219,9 @@ const getAnswersPercentageByCategory = async (req, res) => {
             {
               $group: {
                 _id: { question: "$question", user: "$user" },
-                uniqueAnswers: { $addToSet: { question: "$question", user: "$user" } },
+                uniqueAnswers: {
+                  $addToSet: { question: "$question", user: "$user" },
+                },
               },
             },
             {
@@ -297,7 +307,9 @@ const getAnswersPercentageByModule = async (req, res) => {
             {
               $group: {
                 _id: { question: "$question", user: "$user" },
-                uniqueAnswers: { $addToSet: { question: "$question", user: "$user" } },
+                uniqueAnswers: {
+                  $addToSet: { question: "$question", user: "$user" },
+                },
               },
             },
             {
@@ -383,7 +395,9 @@ const getAnswersPercentageByCourse = async (req, res) => {
             {
               $group: {
                 _id: { question: "$question", user: "$user" },
-                uniqueAnswers: { $addToSet: { question: "$question", user: "$user" } },
+                uniqueAnswers: {
+                  $addToSet: { question: "$question", user: "$user" },
+                },
               },
             },
             {

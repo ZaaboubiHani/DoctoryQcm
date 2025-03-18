@@ -67,12 +67,6 @@ const loginUser = async (req, res) => {
             message: "Votre compte n'est pas encore activé",
           });
         }
-        if (user.deviceToken !== null && user.deviceToken !== undefined && user.deviceToken !== "" && user.deviceToken !== req.body.deviceToken) {
-          return res.status(400).json({
-            success: false,
-            message: "Connexion impossible : Ce compte est déjà utilisé sur un autre appareil. \nVeuillez contacter ce numéro : 06 71 84 68 73",
-          });
-        }
         const token = generateToken(user.id, user.isAdmin);
         res.status(200).json({
           success: true,
