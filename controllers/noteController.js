@@ -7,7 +7,6 @@ const createNote = async (req, res) => {
       user: req.user.userId,
       ...req.body,
     });
-    
 
     const createdNote = await newNote.save();
 
@@ -87,10 +86,55 @@ const deleteNote = async (req, res) => {
     // Delete the note
     await Note.findByIdAndDelete(noteId);
 
-    res.status(200).json({ message: "Note deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Note deleted successfully" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error deleting Note" });
+  }
+};
+
+const getNotes = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.query.userId);
+
+    // Get page and limit from query params (default values: page = 1, limit = 10)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalCount = await Note.countDocuments({ user: userId });
+
+    // Fetch notes with pagination
+    const notes = await Note.aggregate([
+      {
+        $match: { user: userId },
+      },
+      {
+        $project: {
+          note: 1,
+          question: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+      { $sort: { createdAt: -1 } }, // Sort by latest notes
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+
+    res.json({
+      success: true,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      data: notes,
+    });
+  } catch (error) {
+    console.error("Error getting notes by user ID:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -98,5 +142,6 @@ module.exports = {
   createNote,
   updateNote,
   getNote,
-  deleteNote, // Include the deleteNote method in the module exports
+  deleteNote,
+  getNotes,
 };
