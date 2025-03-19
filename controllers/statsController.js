@@ -561,7 +561,7 @@ const getFavouriteStats = async (req, res) => {
       },
     ]);
     
-    res.status(200).json({ success: true, data: correctResults, ...results });
+    res.status(200).json(results);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error getting favourite stats" });

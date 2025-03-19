@@ -123,7 +123,7 @@ const getFavouriteModules = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, data: favouriteModules, ...favouriteModules });
+      .json(favouriteModules);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error getting Favourite Modules" });
