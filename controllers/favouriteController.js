@@ -28,6 +28,7 @@ const removeFavourite = async (req, res) => {
     res.status(500).json({ error: "Error removing Favourite" });
   }
 };
+
 const getFavouriteCategories = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
@@ -120,12 +121,15 @@ const getFavouriteModules = async (req, res) => {
       },
     ]);
 
-    res.status(200).json(favouriteModules);
+    res
+      .status(200)
+      .json({ success: true, data: favouriteModules, ...favouriteModules });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error getting Favourite Modules" });
   }
 };
+
 const getFavouriteCourses = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);

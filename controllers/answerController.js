@@ -29,7 +29,7 @@ const deleteAnswer = async (req, res) => {
     const answer = await Answer.findByIdAndDelete(req.params.id);
     if (answer) {
       await answer.deleteOne();
-      res.json({ message: "Answer removed" });
+      res.json({ success: true, message: "Answer removed" });
     } else {
       res.status(404).json({ message: "Answer not found" });
     }
@@ -42,7 +42,6 @@ const deleteAnswer = async (req, res) => {
 const deleteAllAnswersOfUser = async (req, res) => {
   try {
     const userId = req.query.user;
-    console.log(userId);
 
     const deletedAnswers = await Answer.deleteMany({ user: userId });
 
@@ -96,9 +95,53 @@ const getAnswersByCourseId = async (req, res) => {
   }
 };
 
+
+const getAnswersByUser = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.query.userId);
+
+    // Get page and limit from query params (default values: page = 1, limit = 10)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalCount = await Answer.countDocuments({ user: userId });
+
+    // Fetch answers with pagination
+    const answers = await Answer.aggregate([
+      {
+        $match: { user: userId },
+      },
+      {
+        $project: {
+          answer: 1, // Include answer data
+          question: 1, // Include answer data
+          createdAt: 1, // Include timestamp (if exists)
+        },
+      },
+      { $sort: { createdAt: -1 } }, // Sort by latest answers
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+
+    res.json({
+      success: true,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      data: answers,
+    });
+  } catch (error) {
+    console.error("Error getting answers by user ID:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   createAnswer,
   deleteAnswer,
   getAnswersByCourseId,
   deleteAllAnswersOfUser,
+  getAnswersByUser,
 };

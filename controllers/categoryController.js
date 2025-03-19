@@ -61,26 +61,40 @@ const getCategoriesWithStats = async (req, res) => {
   try {
     const categories = await Category.find();
     let result = [];
-    for(const category of categories){
-
-      const modulesNum = await Module.countDocuments({ category: category._id });
-
+    let correctResult = [];
+    for (const category of categories) {
+      const modulesNum = await Module.countDocuments({
+        category: category._id,
+      });
+    
       const modulesInCategory = await Module.find({ category: category._id });
+    
+      const moduleIds = modulesInCategory.map((module) => module._id);
+    
+      const coursesNum = await Course.countDocuments({
+        module: { $in: moduleIds },
+      });
+    
+      const questionsNum = await Question.countDocuments({
+        category: category._id,
+      });
+    
+      // Convert to plain object before modifying
+      const categoryObj = category.toObject();
       
-      const moduleIds= modulesInCategory.map(module => module._id);
+      categoryObj.modulesNum = modulesNum;
+      categoryObj.coursesNum = coursesNum;
+      categoryObj.questionsNum = questionsNum;
       
-      const coursesNum = await Course.countDocuments({ module: { $in: moduleIds } });
-
-      const questionsNum = await Question.countDocuments({ category: category._id })
-
+      correctResult.push(categoryObj);
       result.push({
-        category:category,
-        modulesNum:modulesNum,
-        coursesNum:coursesNum,
-        questionsNum:questionsNum,
+        category: category,
+        modulesNum: modulesNum,
+        coursesNum: coursesNum,
+        questionsNum: questionsNum,//todo: this part will be removed in the future
       });
     }
-    res.status(200).json(result);
+    res.status(200).json({ success: true, data: correctResult, ...result });
   } catch (error) {
     res.status(500).json({ error: "Error fetching Categories with stats" });
   }
