@@ -94,7 +94,8 @@ const getCategoriesWithStats = async (req, res) => {
         questionsNum: questionsNum,//todo: this part will be removed in the future
       });
     }
-    res.status(200).json({ success: true, data: correctResult, ...result });
+     //todo: fix
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: "Error fetching Categories with stats" });
   }
