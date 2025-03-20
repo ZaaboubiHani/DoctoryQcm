@@ -51,8 +51,22 @@ const getModules = async (req, res) => {
       return res.status(400).json({ error: "Category not provided" });
     }
     const modules = await Module.find({ category: categoryId });
-    //todo: fix
+
     res.status(200).json(modules);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching Modules" });
+  }
+};
+
+const getModulesV2 = async (req, res) => {
+  try {
+    const categoryId = req.query.category;
+    if (!categoryId) {
+      return res.status(400).json({ error: "Category not provided" });
+    }
+    const modules = await Module.find({ category: categoryId });
+
+    res.status(200).json({ success: true, data: modules });
   } catch (error) {
     res.status(500).json({ error: "Error fetching Modules" });
   }
@@ -63,4 +77,5 @@ module.exports = {
   updateModule,
   deleteModule,
   getModules,
+  getModulesV2,
 };

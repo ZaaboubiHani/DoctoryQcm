@@ -75,6 +75,90 @@ const getFavouriteCategories = async (req, res) => {
     res.status(500).json({ error: "Error getting Favourite Categories" });
   }
 };
+
+const getFavouriteCategoriesV2 = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.userId);
+
+    const favouriteCategories = await Favourite.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: "questions",
+          localField: "question",
+          foreignField: "_id",
+          as: "question",
+        },
+      },
+      { $unwind: "$question" },
+      {
+        $group: {
+          _id: "$question.category",
+          questionsNum: { $sum: 1 }, // Count questions per category
+          courseIds: { $addToSet: "$question.course" }, // Collect unique course IDs
+        },
+      },
+      {
+        $lookup: {
+          from: "courses",
+          localField: "courseIds",
+          foreignField: "_id",
+          as: "courses",
+        },
+      },
+      { $unwind: "$courses" }, // Unwind courses to process each separately
+      {
+        $group: {
+          _id: "$_id",
+          questionsNum: { $first: "$questionsNum" },
+          courseIds: { $first: "$courseIds" },
+          modulesNum: { $addToSet: "$courses.module" }, // Collect unique module IDs
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          questionsNum: 1,
+          coursesNum: { $size: "$courseIds" }, // Count unique courses
+          modulesNum: { $size: "$modulesNum" }, // Count unique modules
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "_id",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: "$category" },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              "$category",
+              {
+                questionsNum: "$questionsNum",
+                modulesNum: "$modulesNum",
+                coursesNum: "$coursesNum",
+              },
+            ],
+          },
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, data: favouriteCategories });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error getting Favourite Categories" });
+  }
+};
+
 const getFavouriteModules = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
@@ -121,9 +205,60 @@ const getFavouriteModules = async (req, res) => {
       },
     ]);
 
-    res
-      .status(200)
-      .json(favouriteModules);
+    res.status(200).json(favouriteModules);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error getting Favourite Modules" });
+  }
+};
+
+const getFavouriteModulesV2 = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.userId);
+    const categoryId = new mongoose.Types.ObjectId(req.query.category);
+    const favouriteModules = await Favourite.aggregate([
+      {
+        $match: {
+          user: userId,
+        },
+      },
+      {
+        $lookup: {
+          from: "questions",
+          localField: "question",
+          foreignField: "_id",
+          as: "question",
+        },
+      },
+      { $unwind: "$question" },
+      {
+        $match: {
+          "question.category": categoryId,
+        },
+      },
+      {
+        $group: {
+          _id: "$question.module",
+        },
+      },
+      {
+        $lookup: {
+          from: "modules",
+          localField: "_id",
+          foreignField: "_id",
+          as: "module",
+        },
+      },
+      { $unwind: "$module" },
+      {
+        $project: {
+          _id: "$module._id",
+          name: "$module.name",
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, data: favouriteModules });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error getting Favourite Modules" });
@@ -253,7 +388,9 @@ module.exports = {
   createFavourite,
   removeFavourite,
   getFavouriteCategories,
+  getFavouriteCategoriesV2,
   getFavouriteModules,
   getFavouriteCourses,
   getFavouriteQuestions,
+  getFavouriteModulesV2,
 };

@@ -493,73 +493,7 @@ const getFavouriteStats = async (req, res) => {
       },
     ]);
 
-    const correctResults = await Favourite.aggregate([
-      {
-        $match: {
-          user: new mongoose.Types.ObjectId(userId),
-        },
-      },
-      {
-        $lookup: {
-          from: "questions",
-          localField: "question",
-          foreignField: "_id",
-          as: "question",
-        },
-      },
-      { $unwind: "$question" },
-      {
-        $group: {
-          _id: "$question.category",
-          questionsNum: { $sum: 1 }, // Count questions per category
-          courseIds: { $addToSet: "$question.course" }, // Collect unique course IDs
-        },
-      },
-      {
-        $lookup: {
-          from: "courses",
-          localField: "courseIds",
-          foreignField: "_id",
-          as: "courses",
-        },
-      },
-      { $unwind: "$courses" }, // Unwind courses to process each separately
-      {
-        $group: {
-          _id: "$_id",
-          questionsNum: { $first: "$questionsNum" },
-          courseIds: { $first: "$courseIds" },
-          modulesNum: { $addToSet: "$courses.module" }, // Collect unique module IDs
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          questionsNum: 1,
-          coursesNum: { $size: "$courseIds" }, // Count unique courses
-          modulesNum: { $size: "$modulesNum" }, // Count unique modules
-        },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "_id",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      { $unwind: "$category" },
-      {
-        $replaceRoot: {
-          newRoot: {
-            $mergeObjects: [
-              "$category",
-              { questionsNum: "$questionsNum", modulesNum: "$modulesNum", coursesNum: "$coursesNum" }
-            ],
-          },
-        },
-      },
-    ]);
+    
     
     res.status(200).json(results);
   } catch (error) {

@@ -66,36 +66,72 @@ const getCategoriesWithStats = async (req, res) => {
       const modulesNum = await Module.countDocuments({
         category: category._id,
       });
-    
+
       const modulesInCategory = await Module.find({ category: category._id });
-    
+
       const moduleIds = modulesInCategory.map((module) => module._id);
-    
+
       const coursesNum = await Course.countDocuments({
         module: { $in: moduleIds },
       });
-    
+
       const questionsNum = await Question.countDocuments({
         category: category._id,
       });
-    
+
       // Convert to plain object before modifying
       const categoryObj = category.toObject();
-      
+
       categoryObj.modulesNum = modulesNum;
       categoryObj.coursesNum = coursesNum;
       categoryObj.questionsNum = questionsNum;
-      
+
       correctResult.push(categoryObj);
       result.push({
         category: category,
         modulesNum: modulesNum,
         coursesNum: coursesNum,
-        questionsNum: questionsNum,//todo: this part will be removed in the future
+        questionsNum: questionsNum, //todo: this part will be removed in the future
       });
     }
-     //todo: fix
+    //todo: fix
     res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching Categories with stats" });
+  }
+};
+
+const getCategoriesV2 = async (req, res) => {
+  try {
+    const categories = await Category.find();
+    let result = [];
+    for (const category of categories) {
+      const modulesNum = await Module.countDocuments({
+        category: category._id,
+      });
+
+      const modulesInCategory = await Module.find({ category: category._id });
+
+      const moduleIds = modulesInCategory.map((module) => module._id);
+
+      const coursesNum = await Course.countDocuments({
+        module: { $in: moduleIds },
+      });
+
+      const questionsNum = await Question.countDocuments({
+        category: category._id,
+      });
+
+      // Convert to plain object before modifying
+      const categoryObj = category.toObject();
+
+      categoryObj.modulesNum = modulesNum;
+      categoryObj.coursesNum = coursesNum;
+      categoryObj.questionsNum = questionsNum;
+
+      result.push(categoryObj);
+    }
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ error: "Error fetching Categories with stats" });
   }
@@ -107,4 +143,5 @@ module.exports = {
   deleteCategory,
   getCategories,
   getCategoriesWithStats,
+  getCategoriesV2,
 };

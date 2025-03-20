@@ -36,6 +36,40 @@ const generateSimulation = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+const generateSimulationV2 = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const categoryIds = await Category.find({}, "_id");
+    let questions = [];
+    for (const category of categoryIds) {
+      const randomQuestions = await Question.aggregate([
+        { $match: { category: new mongoose.Types.ObjectId(category._id) } },
+        { $sample: { size: 50 } },
+        { $project: { _id: 1 } },
+      ]);
+      questions = questions.concat(
+        randomQuestions.map((question) => ({
+          question: question._id,
+          answers: [],
+        }))
+      );
+    }
+    const simulation = new Simulation({
+      user: userId,
+      questions: questions,
+    });
+    await simulation.save();
+    await simulation.populate({
+      path: "questions.question",
+      select: "-course -module -createdAt -updatedAt",
+    });
+    res.status(201).json({ success: true, data: simulation });
+  } catch (error) {
+    console.error("Error generating simulation:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 const deleteSimulation = async (req, res) => {
   try {
     const simulationId = req.params.id;
@@ -51,6 +85,7 @@ const deleteSimulation = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 const updateSimlationAnswersQuestions = async (req, res) => {
   try {
     const simulationId = req.params.id;
@@ -64,6 +99,27 @@ const updateSimlationAnswersQuestions = async (req, res) => {
     simulation.timeSpent = timeSpent;
     await simulation.save();
     res.status(200).json({ message: "Simulation updated successfully" });
+  } catch (error) {
+    console.error("Error updating simulation:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const updateSimlationAnswersQuestionsV2 = async (req, res) => {
+  try {
+    const simulationId = req.params.id;
+    const { answers, score, timeSpent } = req.body;
+    const simulation = await Simulation.findById(simulationId);
+    if (!simulation) {
+      return res.status(404).json({ error: "Simulation not found" });
+    }
+    simulation.questions = answers;
+    simulation.score = score;
+    simulation.timeSpent = timeSpent;
+    await simulation.save();
+    res
+      .status(200)
+      .json({ success: true, message: "Simulation updated successfully" });
   } catch (error) {
     console.error("Error updating simulation:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -155,4 +211,5 @@ module.exports = {
   getSimulations,
   getSingleSimulation,
   getSimulationsByUser,
+  updateSimlationAnswersQuestionsV2,
 };

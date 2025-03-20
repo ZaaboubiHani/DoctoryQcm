@@ -215,6 +215,7 @@ const generateRandom = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 const getRandomQuestionsFromModule = async (req, res) => {
   try {
     const module = req.query.module;
@@ -227,6 +228,20 @@ const getRandomQuestionsFromModule = async (req, res) => {
     res.status(500).json({ error: "Error fetching Questions" });
   }
 };
+
+const getRandomQuestionsFromModuleV2 = async (req, res) => {
+  try {
+    const module = req.query.module;
+    const questions = await Question.aggregate([
+      { $match: { module: new mongoose.Types.ObjectId(module) } },
+      { $sample: { size: 40 } },
+    ]);
+    res.status(200).json({ success: true, data: questions });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching Questions" });
+  }
+};
+
 module.exports = {
   createQuestion,
   updateQuestion,
@@ -236,4 +251,5 @@ module.exports = {
   generateRandom,
   getQuestionsWithDetails,
   getRandomQuestionsFromModule,
+  getRandomQuestionsFromModuleV2,
 };
