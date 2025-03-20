@@ -59,6 +59,20 @@ const getCourses = async (req, res) => {
   }
 };
 
+const getCoursesV2 = async (req, res) => {
+  try {
+    const moduleId = req.query.module;
+
+    if (!moduleId) {
+      return res.status(400).json({ error: "Module not provided" });
+    }
+    const courses = await Course.find({ module: moduleId });
+    res.status(200).json({ success: true, data: courses });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching Course" });
+  }
+};
+
 const getCoursesByName = async (req, res) => {
   try {
     console.log("get courses");
@@ -84,4 +98,5 @@ module.exports = {
   deleteCourse,
   getCourses,
   getCoursesByName,
+  getCoursesV2,
 };

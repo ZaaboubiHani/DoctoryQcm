@@ -12,6 +12,11 @@ router.get(
   userJwt,
   questionController.getRandomQuestionsFromModule
 );
+router.get(
+  "/v2/randomModule",
+  userJwt,
+  questionController.getRandomQuestionsFromModuleV2
+);
 router.get("/", userJwt, questionController.getQuestions);
 router.get("/random", userJwt, questionController.generateRandom);
 router.get("/details", userJwt, questionController.getQuestionsWithDetails);
