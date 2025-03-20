@@ -228,16 +228,25 @@ const getRandomQuestionsFromModule = async (req, res) => {
     res.status(500).json({ error: "Error fetching Questions" });
   }
 };
-
 const getRandomQuestionsFromModuleV2 = async (req, res) => {
   try {
     const module = req.query.module;
+    
+    if (!mongoose.Types.ObjectId.isValid(module)) {
+      return res.status(400).json({ error: "Invalid module ID" });
+    }
+
     const questions = await Question.aggregate([
       { $match: { module: new mongoose.Types.ObjectId(module) } },
       { $sample: { size: 40 } },
     ]);
-    res.status(200).json({ success: true, data: questions });
+
+    // Ensure 'exam' is an object before assigning properties
+    const exam = { questions };
+
+    res.status(200).json({ success: true, data: exam });
   } catch (error) {
+    console.error(error); // Log error for debugging
     res.status(500).json({ error: "Error fetching Questions" });
   }
 };

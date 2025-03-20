@@ -12,6 +12,7 @@ router.get("/v2/categories", userJwt, favouriteController.getFavouriteCategories
 router.get("/modules", userJwt, favouriteController.getFavouriteModules);
 router.get("/v2/modules", userJwt, favouriteController.getFavouriteModulesV2);
 router.get("/courses", userJwt, favouriteController.getFavouriteCourses);
+router.get("/v2/courses", userJwt, favouriteController.getFavouriteCoursesV2);
 router.get("/questions", userJwt, favouriteController.getFavouriteQuestions);
 
 module.exports = router;

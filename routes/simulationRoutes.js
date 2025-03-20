@@ -7,7 +7,7 @@ const adminJwt = require('../middlewares/adminJwt')
 // Define routes
 
 router.post("/", userJwt, simulationController.generateSimulation);
-router.post("/v2", userJwt, simulationController.generateSimulation);
+router.post("/v2", userJwt, simulationController.generateSimulationV2);
 router.get("/", userJwt, simulationController.getSimulations);
 router.get("/user", adminJwt, simulationController.getSimulationsByUser);
 router.put(
