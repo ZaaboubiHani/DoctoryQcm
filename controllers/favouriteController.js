@@ -317,6 +317,59 @@ const getFavouriteCourses = async (req, res) => {
     res.status(500).json({ error: "Error getting Favourite Courses" });
   }
 };
+
+const getFavouriteCoursesV2 = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.userId);
+    const moduleId = new mongoose.Types.ObjectId(req.query.module);
+    const favouriteCourses = await Favourite.aggregate([
+      {
+        $match: {
+          user: userId,
+        },
+      },
+      {
+        $lookup: {
+          from: "questions",
+          localField: "question",
+          foreignField: "_id",
+          as: "question",
+        },
+      },
+      { $unwind: "$question" },
+      {
+        $match: {
+          "question.module": moduleId,
+        },
+      },
+      {
+        $group: {
+          _id: "$question.course",
+        },
+      },
+      {
+        $lookup: {
+          from: "courses",
+          localField: "_id",
+          foreignField: "_id",
+          as: "course",
+        },
+      },
+      { $unwind: "$course" },
+      {
+        $project: {
+          _id: "$course._id",
+          name: "$course.name",
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, data: favouriteCourses });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error getting Favourite Courses" });
+  }
+};
 const getFavouriteQuestions = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
@@ -393,4 +446,5 @@ module.exports = {
   getFavouriteCourses,
   getFavouriteQuestions,
   getFavouriteModulesV2,
+  getFavouriteCoursesV2,
 };

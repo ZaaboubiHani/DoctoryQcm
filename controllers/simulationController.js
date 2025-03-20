@@ -212,4 +212,5 @@ module.exports = {
   getSingleSimulation,
   getSimulationsByUser,
   updateSimlationAnswersQuestionsV2,
+  generateSimulationV2,
 };
