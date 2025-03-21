@@ -144,6 +144,87 @@ const getQuestionsWithDetails = async (req, res) => {
   }
 };
 
+const getQuestionsWithDetailsV2 = async (req, res) => {
+  try {
+    const course = req.query.course;
+    const userId = req.user.userId;
+
+    if (!course) {
+      return res
+        .status(400)
+        .json({ error: "Missing course id in request query" });
+    }
+
+    // Use aggregation to get questions with notes and isFavourite status
+    const courseId = new mongoose.Types.ObjectId(course);
+    const questions = await Question.aggregate([
+      {
+        $match: { course: courseId },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $lookup: {
+          from: "favourites",
+          let: { questionId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$question", "$$questionId"] },
+                    { $eq: ["$user", new mongoose.Types.ObjectId(userId)] },
+                  ],
+                },
+              },
+            },
+            { $project: { _id: 1 } }, // Only keep the favourite _id
+          ],
+          as: "favourites",
+        },
+      },
+      {
+        $lookup: {
+          from: "notes",
+          let: { questionId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$question", "$$questionId"] },
+                    { $eq: ["$user", new mongoose.Types.ObjectId(userId)] },
+                  ],
+                },
+              },
+            },
+            { $project: { _id: 1, note: 1 } }, // Only keep the note fields
+          ],
+          as: "notes",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          text: 1,
+          choices: 1,
+          createdAt: 1,
+          correctAnswers: 1,
+          isFavourite: { $gt: [{ $size: "$favourites" }, 0] }, // Check if there are any favourite records
+          note: { $arrayElemAt: ["$notes", 0] }, // Get the first note if it exists
+          favourite: { $ifNull: [{ $arrayElemAt: ["$favourites._id", 0] }, null] } // Get the first favourite document if it exists
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, data: questions });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error fetching Question" });
+  }
+};
+
 const getSingleQuestion = async (req, res) => {
   try {
     const questionId = req.params.id;
@@ -231,7 +312,7 @@ const getRandomQuestionsFromModule = async (req, res) => {
 const getRandomQuestionsFromModuleV2 = async (req, res) => {
   try {
     const module = req.query.module;
-    
+
     if (!mongoose.Types.ObjectId.isValid(module)) {
       return res.status(400).json({ error: "Invalid module ID" });
     }
@@ -259,6 +340,7 @@ module.exports = {
   getSingleQuestion,
   generateRandom,
   getQuestionsWithDetails,
+  getQuestionsWithDetailsV2,
   getRandomQuestionsFromModule,
   getRandomQuestionsFromModuleV2,
 };

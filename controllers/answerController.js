@@ -24,7 +24,45 @@ const createAnswer = async (req, res) => {
   }
 };
 
+const createAnswerV2 = async (req, res) => {
+  try {
+    const existingAnswer = await Answer.findOne({
+      user: req.user.userId,
+      question: req.body.question,
+    });
+    if (!existingAnswer) {
+      const newAnswer = new Answer({
+        user: req.user.userId,
+        ...req.body,
+      });
+      const createdAnswer = await newAnswer.save();
+
+      res.status(201).json({ success: true, data: createdAnswer });
+    } else {
+      res.status(201).json({ success: true, data: existingAnswer });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error creating Answer" });
+  }
+};
+
 const deleteAnswer = async (req, res) => {
+  try {
+    const answer = await Answer.findByIdAndDelete(req.params.id);
+    if (answer) {
+      await answer.deleteOne();
+      res.json({ success: true, message: "Answer removed" });
+    } else {
+      res.status(404).json({ message: "Answer not found" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error deleting Answer" });
+  }
+};
+
+const deleteAnswerV2 = async (req, res) => {
   try {
     const answer = await Answer.findByIdAndDelete(req.params.id);
     if (answer) {
@@ -94,7 +132,45 @@ const getAnswersByCourseId = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+const getAnswersByCourseV2 = async (req, res) => {
+  try {
+    const courseId = new mongoose.Types.ObjectId(req.query.course);
+    if (!courseId) {
+      return res
+        .status(404)
+        .json({ message: "Missing Course ID in query params" });
+    }
+    const userId = new mongoose.Types.ObjectId(req.user.userId);
+    const answers = await Answer.aggregate([
+      {
+        $lookup: {
+          from: "questions",
+          localField: "question",
+          foreignField: "_id",
+          as: "question",
+        },
+      },
+      { $unwind: "$question" },
+      {
+        $match: {
+          "question.course": courseId,
+          user: userId,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          question: "$question._id",
+        },
+      },
+    ]);
 
+    res.json({ success: true, data: answers });
+  } catch (error) {
+    console.error("Error getting answers by course ID:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 const getAnswersByUser = async (req, res) => {
   try {
@@ -144,4 +220,7 @@ module.exports = {
   getAnswersByCourseId,
   deleteAllAnswersOfUser,
   getAnswersByUser,
+  getAnswersByCourseV2,
+  createAnswerV2,
+  deleteAnswerV2,
 };

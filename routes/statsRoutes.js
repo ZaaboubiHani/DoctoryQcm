@@ -12,14 +12,29 @@ router.get(
   statsController.getAnswersPercentageByCategory
 );
 router.get(
+  "/v2/answers-per-category",
+  userJwt,
+  statsController.getCategoriesStatsV2
+);
+router.get(
   "/answers-per-module",
   userJwt,
   statsController.getAnswersPercentageByModule
 );
 router.get(
+  "/v2/answers-per-module",
+  userJwt,
+  statsController.getModulesStatsV2
+);
+router.get(
   "/answers-per-course",
   userJwt,
   statsController.getAnswersPercentageByCourse
+);
+router.get(
+  "/v2/answers-per-course",
+  userJwt,
+  statsController.getCoursesStatsV2
 );
 router.get(
   "/favouritecategories",
