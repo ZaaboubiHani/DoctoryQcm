@@ -17,6 +17,22 @@ const createNote = async (req, res) => {
   }
 };
 
+const createNoteV2 = async (req, res) => {
+  try {
+    const newNote = new Note({
+      user: req.user.userId,
+      ...req.body,
+    });
+
+    const createdNote = await newNote.save();
+
+    res.status(201).json({ success: true, data: createdNote });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error creating Note" });
+  }
+};
+
 const updateNote = async (req, res) => {
   const noteId = req.params.id;
   try {
@@ -42,6 +58,37 @@ const updateNote = async (req, res) => {
     }
 
     res.status(200).json(updatedNote);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error updating Note" });
+  }
+};
+
+const updateNoteV2 = async (req, res) => {
+  const noteId = req.params.id;
+  try {
+    const note = await Note.findById(noteId).populate("user");
+    if (note.user.id !== req.user.userId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    await Note.deleteMany({
+      user: req.user.userId,
+      question: req.body.question,
+      _id: {
+        $ne: new mongoose.Types.ObjectId(noteId),
+      },
+    });
+
+    const updatedNote = await Note.findByIdAndUpdate(noteId, req.body, {
+      new: true,
+    });
+
+    if (!updatedNote) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.status(200).json({ success: true, data: updatedNote });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error updating Note" });
@@ -89,6 +136,35 @@ const deleteNote = async (req, res) => {
     res
       .status(200)
       .json({ success: true, message: "Note deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error deleting Note" });
+  }
+};
+
+const deleteNoteV2 = async (req, res) => {
+  const noteId = req.params.id;
+
+  try {
+    // Find the note by ID and populate the user field
+    const note = await Note.findById(noteId).populate("user");
+
+    // Check if the note exists
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    // Check if the note belongs to the current user
+    if (note.user.id !== req.user.userId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Delete the note
+    await Note.findByIdAndDelete(noteId);
+
+    res
+      .status(200)
+      .json({ success: true });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error deleting Note" });
@@ -144,4 +220,7 @@ module.exports = {
   getNote,
   deleteNote,
   getNotes,
+  createNoteV2,
+  updateNoteV2,
+  deleteNoteV2,
 };
