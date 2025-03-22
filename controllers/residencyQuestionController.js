@@ -66,8 +66,39 @@ const getResidencyQuestions = async (req, res) => {
   }
 };
 
+const getResidencyQuestionsV2 = async (req, res) => {
+  try {
+    const residency = req.query.residency;
+    const userId = req.user.userId;
+    if (!residency) {
+      return res
+        .status(400)
+        .json({ error: "Missing residency id in request query" });
+    }
+    const residencyQuestions = await ResidencyQuestion.find({
+      residency: residency,
+    }).select("-createdAt -updatedAt");
+    let result = [];
+    for (const question of residencyQuestions) {
+      const note = await Note.findOne({
+        user: userId,
+        residencyQuestion: question._id,
+      }).select("note");
+
+      result.push({
+        ...question.toObject(),
+        note: note,
+      });
+    }
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching Residency Questions" });
+  }
+};
+
 module.exports = {
   createResidencyQuestion,
   deleteResidencyQuestion,
   getResidencyQuestions,
+  getResidencyQuestionsV2,
 };

@@ -9,6 +9,7 @@ const adminJwt = require('../middlewares/adminJwt')
 router.post("/", userJwt, simulationController.generateSimulation);
 router.post("/v2", userJwt, simulationController.generateSimulationV2);
 router.get("/", userJwt, simulationController.getSimulations);
+router.get("/v2", userJwt, simulationController.getSimulationsV2);
 router.get("/user", adminJwt, simulationController.getSimulationsByUser);
 router.put(
   "/:id",
@@ -22,5 +23,6 @@ router.put(
 );
 router.delete("/:id", userJwt, simulationController.deleteSimulation);
 router.get("/:id", userJwt, simulationController.getSingleSimulation);
+router.get("/v2/:id", userJwt, simulationController.getSingleSimulationV2);
 
 module.exports = router;

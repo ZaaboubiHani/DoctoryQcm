@@ -33,8 +33,17 @@ const deleteResidency = async (req, res) => {
 
 const getResidencies = async (req, res) => {
   try {
-    const residencies = await Residency.find().select('-createdAt -updatedAt' );
+    const residencies = await Residency.find().select("-createdAt -updatedAt");
     res.status(200).json(residencies);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching Residencies" });
+  }
+};
+
+const getResidenciesV2 = async (req, res) => {
+  try {
+    const residencies = await Residency.find().select("-createdAt -updatedAt");
+    res.status(200).json({ success: true, data: residencies });
   } catch (error) {
     res.status(500).json({ error: "Error fetching Residencies" });
   }
@@ -44,4 +53,5 @@ module.exports = {
   createResidency,
   deleteResidency,
   getResidencies,
+  getResidenciesV2,
 };
