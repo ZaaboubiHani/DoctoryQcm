@@ -42,12 +42,14 @@ const generateSimulationV2 = async (req, res) => {
     const userId = req.user.userId;
     const categoryIds = await Category.find({}, "_id");
     let questions = [];
+
     for (const category of categoryIds) {
       const randomQuestions = await Question.aggregate([
         { $match: { category: new mongoose.Types.ObjectId(category._id) } },
         { $sample: { size: 50 } },
         { $project: { _id: 1 } },
       ]);
+
       questions = questions.concat(
         randomQuestions.map((question) => ({
           question: question._id,
@@ -55,21 +57,42 @@ const generateSimulationV2 = async (req, res) => {
         }))
       );
     }
+
     const simulation = new Simulation({
       user: userId,
       questions: questions,
     });
+
     await simulation.save();
+
+    // Populate the questions
     await simulation.populate({
       path: "questions.question",
-      select: "-course -module -createdAt -updatedAt",
+      select: "text category choices correctAnswers", // Select only relevant fields
+      populate: {
+        path: "category",
+        model: "Category",
+        select: "name",
+      },
     });
-    res.status(201).json({ success: true, data: simulation });
+
+    // Convert Mongoose document to plain object
+    const responseSimulation = simulation.toObject();
+
+    // Flatten the questions array
+    responseSimulation.questions = responseSimulation.questions.map((q) => ({
+      ...q.question, // Spread the properties of the question object
+      answers: q.answers, // Keep the answers array
+      category: q.question?.category?.name || null, // Ensure safe access
+    }));
+
+    res.status(201).json({ success: true, data: responseSimulation });
   } catch (error) {
     console.error("Error generating simulation:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 const deleteSimulation = async (req, res) => {
   try {
     const simulationId = req.params.id;
@@ -133,6 +156,19 @@ const getSimulations = async (req, res) => {
       .select("id score updatedAt timeSpent")
       .sort("-createdAt");
     res.status(200).json(simulations);
+  } catch (error) {
+    console.error("Error getting simulations:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const getSimulationsV2 = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const simulations = await Simulation.find({ user: userId })
+      .select("id score updatedAt timeSpent")
+      .sort("-createdAt");
+    res.status(200).json({ success: true, data: simulations });
   } catch (error) {
     console.error("Error getting simulations:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -204,6 +240,51 @@ const getSingleSimulation = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+const getSingleSimulationV2 = async (req, res) => {
+  try {
+    const simulationId = req.params.id;
+    const simulation = await Simulation.findById(simulationId).populate({
+      path: "questions.question",
+      model: "Question",
+      select: "text category course module correctAnswers choices", // Select fields from Question model directly
+      populate: [
+        { path: "category", model: "Category", select: "name" },
+        { path: "course", model: "Course", select: "name" },
+        { path: "module", model: "Module", select: "name" },
+      ],
+    });
+
+    if (!simulation) {
+      return res.status(404).json({ error: "Simulation not found" });
+    }
+
+    // Flatten nested 'question' objects safely
+    const flattenedQuestions = simulation.questions
+      .map((q) => {
+        if (!q.question) return null; // Handle missing question object
+
+        return {
+          ...q.question.toObject(), // Spread properties of 'question' object
+          category: q.question.category?.name || null, // Safe access with fallback
+          course: q.question.course?.name || null,
+          module: q.question.module?.name || null,
+          userAnswers: q.answers,
+        };
+      })
+      .filter(Boolean); // Remove any null values
+
+    // Replace 'questions' array in simulation with flattened version
+    const responseSimulation = simulation.toObject(); // Convert Mongoose object to plain JS object
+    responseSimulation.questions = flattenedQuestions;
+
+    res.status(200).json({ success: true, data: responseSimulation });
+  } catch (error) {
+    console.error("Error getting single simulation:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   generateSimulation,
   deleteSimulation,
@@ -213,4 +294,6 @@ module.exports = {
   getSimulationsByUser,
   updateSimlationAnswersQuestionsV2,
   generateSimulationV2,
+  getSimulationsV2,
+  getSingleSimulationV2,
 };
