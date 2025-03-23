@@ -161,14 +161,35 @@ const getSimulations = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 const getSimulationsV2 = async (req, res) => {
   try {
     const userId = req.user.userId;
+
+    // Get page and limit from query params, with defaults
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Fetch paginated simulations
     const simulations = await Simulation.find({ user: userId })
       .select("id score updatedAt timeSpent")
-      .sort("-createdAt");
-    res.status(200).json({ success: true, data: simulations });
+      .sort("-createdAt")
+      .skip(skip)
+      .limit(limit);
+
+    // Get total count for pagination info
+    const totalSimulations = await Simulation.countDocuments({ user: userId });
+    const totalPages = Math.ceil(totalSimulations / limit);
+
+    res.status(200).json({
+      success: true,
+      data: simulations,
+      currentPage: page,
+      totalPages,
+      totalItems: totalSimulations,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    });
   } catch (error) {
     console.error("Error getting simulations:", error);
     res.status(500).json({ error: "Internal Server Error" });
