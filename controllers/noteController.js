@@ -113,6 +113,7 @@ const getNote = async (req, res) => {
     res.status(500).json({ error: "Error fetching Note" });
   }
 };
+
 const deleteNote = async (req, res) => {
   const noteId = req.params.id;
 
@@ -141,6 +142,24 @@ const deleteNote = async (req, res) => {
     res.status(500).json({ error: "Error deleting Note" });
   }
 };
+const deleteAllNotesOfUser = async (req, res) => {
+  try {
+    const userId = req.query.user; // Get the authenticated user's ID
+
+    // Delete all notes belonging to the user
+    const deleteResult = await Note.deleteMany({ user: userId });
+
+    if (deleteResult.deletedCount === 0) {
+      return res.status(404).json({ error: "No notes found for this user" });
+    }
+
+    res.status(200).json({ success: true, message: "All notes deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting notes:", error);
+    res.status(500).json({ error: "Error deleting notes" });
+  }
+};
+
 
 const deleteNoteV2 = async (req, res) => {
   const noteId = req.params.id;
@@ -162,9 +181,7 @@ const deleteNoteV2 = async (req, res) => {
     // Delete the note
     await Note.findByIdAndDelete(noteId);
 
-    res
-      .status(200)
-      .json({ success: true });
+    res.status(200).json({ success: true });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error deleting Note" });
@@ -223,4 +240,5 @@ module.exports = {
   createNoteV2,
   updateNoteV2,
   deleteNoteV2,
+  deleteAllNotesOfUser,
 };

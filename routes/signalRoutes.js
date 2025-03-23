@@ -7,7 +7,9 @@ const adminJwt = require('../middlewares/adminJwt')
 // Define routes
 
 router.post("/", userJwt, signalController.createSignal);
-router.get("/user", adminJwt, signalController.getSignals);
+router.get("/user", adminJwt, signalController.getSignalsOfUser);
+router.get("/", adminJwt, signalController.getSignals);
 router.delete("/:id", adminJwt, signalController.deleteSignal);
+router.delete("/user/:id", adminJwt, signalController.deleteAllSignalsOfUser);
 
 module.exports = router;
