@@ -17,7 +17,7 @@ const createSignal = async (req, res) => {
   }
 };
 
-const getSignals = async (req, res) => {
+const getSignalsOfUser = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.query.userId);
 
@@ -36,9 +36,48 @@ const getSignals = async (req, res) => {
       },
       {
         $project: {
-          signal: 1, 
-          createdAt: 1, 
-          updatedAt: 1, 
+          signal: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+      { $sort: { createdAt: -1 } }, // Sort by latest signals
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+
+    res.json({
+      success: true,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      data: signals,
+    });
+  } catch (error) {
+    console.error("Error getting signals by user ID:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const getSignals = async (req, res) => {
+  try {
+
+    // Get page and limit from query params (default values: page = 1, limit = 10)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalCount = await Signal.countDocuments();
+
+    // Fetch signals with pagination
+    const signals = await Signal.aggregate([
+      {
+        $project: {
+          signal: 1,
+          user: 1,
+          createdAt: 1,
+          updatedAt: 1,
         },
       },
       { $sort: { createdAt: -1 } }, // Sort by latest signals
@@ -67,7 +106,9 @@ const deleteSignal = async (req, res) => {
     const deletedSignal = await Signal.findByIdAndDelete(signalId);
 
     if (!deletedSignal) {
-      return res.status(404).json({ success: false, message: "Signal not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Signal not found" });
     }
 
     res.json({ success: true, message: "Signal deleted successfully" });
@@ -77,9 +118,30 @@ const deleteSignal = async (req, res) => {
   }
 };
 
+const deleteAllSignalsOfUser = async (req, res) => {
+  try {
+    const userId = req.query.user; // Assuming userId is passed in params
+
+    // Find signals belonging to the user and delete them
+    const deleteResult = await Signal.deleteMany({ user: userId });
+
+    if (deleteResult.deletedCount === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No signals found for this user" });
+    }
+
+    res.json({ success: true, message: "All signals deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting signals:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 module.exports = {
   createSignal,
-  getSignals,
+  getSignalsOfUser,
   deleteSignal,
+  deleteAllSignalsOfUser,
+  getSignals
 };

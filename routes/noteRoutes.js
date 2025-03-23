@@ -13,6 +13,7 @@ router.get("/user", adminJwt, noteController.getNotes);
 router.put("/:id", userJwt,noteController.updateNote);
 router.put("/v2/:id", userJwt,noteController.updateNoteV2);
 router.delete("/:id", userJwt,noteController.deleteNote);
+router.delete("/user/:id", userJwt,noteController.deleteAllNotesOfUser);
 router.delete("v2/:id", userJwt,noteController.deleteNoteV2);
 
 module.exports = router;

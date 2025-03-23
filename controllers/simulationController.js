@@ -109,6 +109,25 @@ const deleteSimulation = async (req, res) => {
   }
 };
 
+const deleteAllSimulationsOfUser = async (req, res) => {
+  try {
+    const userId = req.query.user; // Assuming authentication middleware provides `userId`
+
+    // Delete all simulations belonging to the user
+    const deleteResult = await Simulation.deleteMany({ user: userId });
+
+    if (deleteResult.deletedCount === 0) {
+      return res.status(404).json({ error: "No simulations found for this user" });
+    }
+
+    res.status(200).json({ success: true, message: "All simulations deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting simulations:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
 const updateSimlationAnswersQuestions = async (req, res) => {
   try {
     const simulationId = req.params.id;
@@ -317,4 +336,5 @@ module.exports = {
   generateSimulationV2,
   getSimulationsV2,
   getSingleSimulationV2,
+  deleteAllSimulationsOfUser,
 };

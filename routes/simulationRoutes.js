@@ -22,6 +22,7 @@ router.put(
   simulationController.updateSimlationAnswersQuestionsV2
 );
 router.delete("/:id", userJwt, simulationController.deleteSimulation);
+router.delete("/user/:id", userJwt, simulationController.deleteAllSimulationsOfUser);
 router.get("/:id", userJwt, simulationController.getSingleSimulation);
 router.get("/v2/:id", userJwt, simulationController.getSingleSimulationV2);
 
