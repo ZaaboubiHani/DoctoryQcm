@@ -84,7 +84,9 @@ const deleteAllAnswersOfUser = async (req, res) => {
     const deletedAnswers = await Answer.deleteMany({ user: userId });
 
     if (deletedAnswers.deletedCount > 0) {
-      res.status(200).json({ message: "All answers deleted successfully." });
+    res
+      .status(200)
+      .json({ success: true, message: "All answers deleted successfully." });
     } else {
       res.status(404).json({ message: "No answers found for this user." });
     }
