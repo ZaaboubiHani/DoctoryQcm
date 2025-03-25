@@ -102,13 +102,14 @@ const updateUser = async (req, res) => {
         message: "Identifiant utilisateur manquant",
       });
     }
-   
+
     let userData = {
       email: req.body.email,
       name: req.body.name,
       phoneNumber: req.body.phoneNumber,
       deviceToken: req.body.deviceToken,
       isValidated: req.body.isValidated,
+      year: req.body.year,
     };
     if (req.body.password) {
       userData.passwordHash = await bcrypt.hash(req.body.password, 10);
@@ -119,6 +120,7 @@ const updateUser = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Utilisateur N'existe Pas" });
     }
+
     res.status(200).json({
       success: true,
       message: "Utilisateur mis à jour avec succès",
@@ -194,18 +196,23 @@ const getUsers = async (req, res) => {
     res.status(500).send("Une erreur s'est produite.");
   }
 };
+
 const getSingleUser = async (req, res) => {
   try {
     const userId = req.params.id; // Assuming the user ID is passed as a URL parameter
 
     if (!userId) {
-      return res.status(400).json({ success: false, message: "User ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID is required" });
     }
 
     const user = await User.findById(userId).select("-passwordHash"); // Exclude passwordHash for security
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     res.status(200).json({ success: true, data: user });
