@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    year: {
+      type: String,
+      enum: ["Residency", "Fourth", "Fifth", "Sixth"],
+      default: "Residency",
+    },
   },
   { timestamps: true, versionKey: false }
 );
