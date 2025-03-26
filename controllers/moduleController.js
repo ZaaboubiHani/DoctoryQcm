@@ -1,4 +1,5 @@
 const Module = require("../models/module");
+const mongoose = require("mongoose");
 
 const createModule = async (req, res) => {
   try {
@@ -8,11 +9,12 @@ const createModule = async (req, res) => {
 
     const createdModule = await newModule.save();
 
-    res.status(201).json(createdModule);
+    res.status(201).json({ success: true, data: createdModule });
   } catch (error) {
     res.status(500).json({ error: "Error creating Module" });
   }
 };
+
 const updateModule = async (req, res) => {
   const moduleId = req.params.id;
   try {
@@ -24,11 +26,12 @@ const updateModule = async (req, res) => {
       return res.status(404).json({ error: "Module not found" });
     }
 
-    res.status(200).json(updatedModule);
+    res.status(200).json({ success: true, data: updatedModule });
   } catch (error) {
     res.status(500).json({ error: "Error updating Category" });
   }
 };
+
 const deleteModule = async (req, res) => {
   const moduleId = req.params.id;
   try {
@@ -38,7 +41,9 @@ const deleteModule = async (req, res) => {
       return res.status(404).json({ error: "Module not found" });
     }
 
-    res.status(200).json({ message: "Module deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Module deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Error deleting Module" });
   }
@@ -72,10 +77,50 @@ const getModulesV2 = async (req, res) => {
   }
 };
 
+const getModulesPaginated = async (req, res) => {
+  try {
+    const { category, page = 1, limit = 10 } = req.query;
+
+    const pageNumber = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * pageSize;
+
+    let matchStage = {};
+    if (category) {
+      matchStage.category = new mongoose.Types.ObjectId(category);
+    }
+
+    const modules = await Module.aggregate([
+      { $match: matchStage }, // Filter by category if provided
+      { $sort: { _id: -1 } }, // Sort by newest first (change as needed)
+      { $skip: skip }, // Skip previous pages
+      { $limit: pageSize }, // Limit results per page
+    ]);
+
+    // Count total documents for pagination info
+    const totalCount = await Module.countDocuments(matchStage);
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    res.status(200).json({
+      success: true,
+      data: modules,
+      currentPage: pageNumber,
+      totalPages,
+      totalCount: totalCount,
+      pageSize,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ error: "Error fetching Modules" });
+  }
+};
+
 module.exports = {
   createModule,
   updateModule,
   deleteModule,
   getModules,
   getModulesV2,
+  getModulesPaginated,
 };
