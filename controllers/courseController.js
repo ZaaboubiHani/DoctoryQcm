@@ -8,7 +8,7 @@ const createCourse = async (req, res) => {
 
     const createdCourse = await newCourse.save();
 
-    res.status(201).json(createdCourse);
+    res.status(201).json({ success: true, data: createdCourse });
   } catch (error) {
     res.status(500).json({ error: "Error creating Course" });
   }
@@ -24,7 +24,7 @@ const updateCourse = async (req, res) => {
       return res.status(404).json({ error: "Course not found" });
     }
 
-    res.status(200).json(updatedCourse);
+    res.status(200).json({ success: true, data: updatedCourse });
   } catch (error) {
     res.status(500).json({ error: "Error updating Course" });
   }
@@ -38,7 +38,9 @@ const deleteCourse = async (req, res) => {
       return res.status(404).json({ error: "Course not found" });
     }
 
-    res.status(200).json({ message: "Course deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Course deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Error deleting Course" });
   }
@@ -72,6 +74,7 @@ const getCoursesV2 = async (req, res) => {
     res.status(500).json({ error: "Error fetching Course" });
   }
 };
+
 
 const getCoursesByName = async (req, res) => {
   try {

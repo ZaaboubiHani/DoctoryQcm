@@ -21,7 +21,7 @@ const createQuestion = async (req, res) => {
 
     const createdQuestion = await newQuestion.save();
 
-    res.status(201).json(createdQuestion);
+    res.status(201).json({ success: true, data: createdQuestion });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error creating Question" });
@@ -30,6 +30,7 @@ const createQuestion = async (req, res) => {
 
 const updateQuestion = async (req, res) => {
   const questionId = req.params.id;
+
   try {
     const updatedQuestion = await Question.findByIdAndUpdate(
       questionId,
@@ -43,7 +44,7 @@ const updateQuestion = async (req, res) => {
       return res.status(404).json({ error: "Question not found" });
     }
 
-    res.status(200).json(updatedQuestion);
+    res.status(200).json({ success: true, data: updatedQuestion });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error updating Question" });
@@ -59,7 +60,9 @@ const deleteQuestion = async (req, res) => {
       return res.status(404).json({ error: "Question not found" });
     }
 
-    res.status(200).json({ message: "Question deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Question deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Error deleting Question" });
   }
@@ -213,7 +216,50 @@ const getQuestionsWithDetailsV2 = async (req, res) => {
           correctAnswers: 1,
           isFavourite: { $gt: [{ $size: "$favourites" }, 0] }, // Check if there are any favourite records
           note: { $arrayElemAt: ["$notes", 0] }, // Get the first note if it exists
-          favourite: { $ifNull: [{ $arrayElemAt: ["$favourites._id", 0] }, null] } // Get the first favourite document if it exists
+          favourite: {
+            $ifNull: [{ $arrayElemAt: ["$favourites._id", 0] }, null],
+          }, // Get the first favourite document if it exists
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, data: questions });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error fetching Question" });
+  }
+};
+
+const getQuestionsPaginated = async (req, res) => {
+  try {
+    const course = req.query.course;
+
+    if (!course) {
+      return res
+        .status(400)
+        .json({ error: "Missing course id in request query" });
+    }
+
+    // Use aggregation to get questions with notes and isFavourite status
+    const courseId = new mongoose.Types.ObjectId(course);
+    const questions = await Question.aggregate([
+      {
+        $match: { course: courseId },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+
+      {
+        $project: {
+          _id: 1,
+          text: 1,
+          category: 1,
+          module: 1,
+          course: 1,
+          choices: 1,
+          createdAt: 1,
+          correctAnswers: 1,
         },
       },
     ]);
@@ -343,4 +389,5 @@ module.exports = {
   getQuestionsWithDetailsV2,
   getRandomQuestionsFromModule,
   getRandomQuestionsFromModuleV2,
+  getQuestionsPaginated,
 };

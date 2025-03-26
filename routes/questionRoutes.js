@@ -20,9 +20,14 @@ router.get(
 router.get("/", userJwt, questionController.getQuestions);
 router.get("/random", userJwt, questionController.generateRandom);
 router.get("/details", userJwt, questionController.getQuestionsWithDetails);
-router.get("/v2/details", userJwt, questionController.getQuestionsWithDetailsV2);
+router.get(
+  "/v2/details",
+  userJwt,
+  questionController.getQuestionsWithDetailsV2
+);
+router.get("/page", userJwt, questionController.getQuestionsPaginated);
 router.get("/:id", userJwt, questionController.getSingleQuestion);
 router.put("/:id", adminJwt, questionController.updateQuestion);
-// router.delete("/:id", questionController.deleteQuestion);
+router.delete("/:id", adminJwt, questionController.deleteQuestion);
 
 module.exports = router;
