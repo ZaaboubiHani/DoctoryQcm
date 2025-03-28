@@ -2,6 +2,12 @@ const multer = require("multer");
 const path = require("path");
 const File = require("../models/file");
 const fs = require("fs");
+const express = require("express");
+
+// Express app with increased file size limit
+const app = express();
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 // Function to create storage for different types of files
 const createStorage = (folderName) => {
@@ -37,10 +43,11 @@ const documentFilter = (req, file, cb) => {
   }
 };
 
-// Multer instance for document uploads
+// Multer instance for document uploads with increased file size limit (100MB)
 const uploadDoc = multer({
   storage: createStorage("documents"),
   fileFilter: documentFilter,
+  limits: { fileSize: 100 * 1024 * 1024 }, // Set limit to 100MB
 }).single("document");
 
 // Upload document handler
@@ -48,8 +55,13 @@ const uploadDocument = async (req, res) => {
   try {
     await new Promise((resolve, reject) => {
       uploadDoc(req, res, (err) => {
-        if (err) reject(err);
-        else resolve();
+        if (err) {
+          if (err.code === "LIMIT_FILE_SIZE") {
+            return reject({ status: 413, message: "File size exceeds limit (100MB)." });
+          }
+          return reject(err);
+        }
+        resolve();
       });
     });
 
@@ -71,14 +83,14 @@ const uploadDocument = async (req, res) => {
       data: newFile,
     });
   } catch (err) {
-    res.status(500).send({
-      message: "Error occurred during document upload or database operation",
+    res.status(err.status || 500).send({
+      message: err.message || "Error occurred during document upload.",
       error: err,
     });
   }
 };
 
-
+// Delete file function
 const deletePath = (filePath) => {
   return new Promise((resolve, reject) => {
     fs.unlink(filePath, (err) => {
@@ -88,6 +100,7 @@ const deletePath = (filePath) => {
   });
 };
 
+// Delete file handler
 const deleteFile = async (req, res) => {
   try {
     const fileId = req.params.id;
@@ -95,9 +108,8 @@ const deleteFile = async (req, res) => {
     if (!file) {
       return res.status(404).send({ message: "File not found" });
     }
-    const baseUrl = process.env.BASE_URL;
-    const filePath = file.url.replace(baseUrl, "");
 
+    const filePath = file.url;
     await deletePath(filePath);
 
     await File.findByIdAndDelete(fileId);
@@ -111,8 +123,7 @@ const deleteFile = async (req, res) => {
   }
 };
 
-
 module.exports = {
-  uploadDocument, // Add the new upload function
+  uploadDocument,
   deleteFile,
 };
