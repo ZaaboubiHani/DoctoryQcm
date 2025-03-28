@@ -3,7 +3,6 @@ const path = require("path");
 const File = require("../models/file");
 const fs = require("fs");
 const express = require("express");
-
 // Express app with increased file size limit
 const app = express();
 app.use(express.json({ limit: "100mb" }));
@@ -90,12 +89,13 @@ const uploadDocument = async (req, res) => {
   }
 };
 
+
 // Delete file function
 const deletePath = (filePath) => {
   return new Promise((resolve, reject) => {
     fs.unlink(filePath, (err) => {
-      if (err) reject(err);
-      else resolve();
+      if (err) return reject(err);
+      resolve();
     });
   });
 };
@@ -105,22 +105,30 @@ const deleteFile = async (req, res) => {
   try {
     const fileId = req.params.id;
     const file = await File.findById(fileId);
+
     if (!file) {
       return res.status(404).send({ message: "File not found" });
     }
 
-    const filePath = file.url;
+    // Ensure the file path is correct
+    const filePath = path.join(__dirname, "..", file.url);
+
+    // Check if the file exists before deleting
+    if (!fs.existsSync(filePath)) {
+      console.error("File does not exist:", filePath);
+      return res.status(404).send({ message: "File not found on server" });
+    }
+
     await deletePath(filePath);
 
     await File.findByIdAndDelete(fileId);
 
     res.send({ message: "File deleted successfully" });
   } catch (err) {
-    console.log(err);
-    
+    console.error("Error during file deletion:", err);
     res.status(500).send({
       message: "Error occurred during deletion",
-      error: err,
+      error: err.message,
     });
   }
 };
