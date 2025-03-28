@@ -107,20 +107,24 @@ const deleteFile = async (req, res) => {
     const file = await File.findById(fileId);
 
     if (!file) {
-      return res.status(404).send({ message: "File not found" });
+      return res.status(404).send({ message: "File not found in DB" });
     }
 
-    // Ensure the file path is correct
+    console.log("File object from DB:", file); // Debugging step
+    console.log("File URL from DB:", file.url);
+
+    if (!file.url) {
+      return res.status(400).send({ message: "File URL is missing in DB" });
+    }
+
     const filePath = path.join(__dirname, "..", file.url);
 
-    // Check if the file exists before deleting
     if (!fs.existsSync(filePath)) {
-      console.error("File does not exist:", filePath);
+      console.error("File does not exist on disk:", filePath);
       return res.status(404).send({ message: "File not found on server" });
     }
 
     await deletePath(filePath);
-
     await File.findByIdAndDelete(fileId);
 
     res.send({ message: "File deleted successfully" });
@@ -132,6 +136,7 @@ const deleteFile = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   uploadDocument,
