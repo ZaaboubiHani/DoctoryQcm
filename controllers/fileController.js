@@ -117,7 +117,9 @@ const deleteFile = async (req, res) => {
       return res.status(400).send({ message: "File URL is missing in DB" });
     }
 
-    const filePath = path.join(__dirname, "..", file.url);
+    const baseUrl = process.env.BASE_URL;
+
+    const filePath = path.join(__dirname, "..", file.url.replace(baseUrl, ""));
 
     if (!fs.existsSync(filePath)) {
       console.error("File does not exist on disk:", filePath);
