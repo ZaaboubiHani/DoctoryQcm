@@ -116,6 +116,8 @@ const deleteFile = async (req, res) => {
 
     res.send({ message: "File deleted successfully" });
   } catch (err) {
+    console.log(err);
+    
     res.status(500).send({
       message: "Error occurred during deletion",
       error: err,
