@@ -36,6 +36,8 @@ const simulationRoutes = require('./routes/simulationRoutes')
 const residencyRoutes = require('./routes/residencyRoutes')
 const residencyQuestionRoutes = require('./routes/residencyQuestionRoutes')
 const downloadRoutes = require('./routes/downloadRoutes')
+const fileRoutes = require("./routes/fileRoutes");
+
 
 const api = process.env.API_URL
 
@@ -53,6 +55,8 @@ app.use('/simulations', simulationRoutes)
 app.use('/residencies', residencyRoutes)
 app.use('/residencyQuestions', residencyQuestionRoutes)
 app.use('/downloads', downloadRoutes)
+app.use("/file", fileRoutes);
+app.use("/uploads", express.static("uploads"));
 
 app.get('/', function (req, res) {
   res.send('Welcome to Doctory QCM')

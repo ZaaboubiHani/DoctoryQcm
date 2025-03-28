@@ -76,6 +76,7 @@ const getSignals = async (req, res) => {
         $project: {
           signal: 1,
           user: 1,
+          question: 1,
           createdAt: 1,
           updatedAt: 1,
         },

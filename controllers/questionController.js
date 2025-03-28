@@ -324,6 +324,28 @@ const getSingleQuestion = async (req, res) => {
     res.status(500).json({ error: "Error fetching Question" });
   }
 };
+const getSingleQuestionV2 = async (req, res) => {
+  try {
+    const questionId = req.params.id;
+    if (!questionId) {
+      return res
+        .status(400)
+        .json({ error: "Missing Question id in request params" });
+    }
+
+    const question = await Question.findOne({ _id: questionId });
+
+    if (!question) {
+      return res.status(404).json({ error: "Question not found" });
+    }
+
+    res.json({ success: true, data: question });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Error fetching Question" });
+  }
+};
+
 const generateRandom = async (req, res) => {
   try {
     const categoryIds = await Category.find({}, "_id");
@@ -390,4 +412,5 @@ module.exports = {
   getRandomQuestionsFromModule,
   getRandomQuestionsFromModuleV2,
   getQuestionsPaginated,
+  getSingleQuestionV2,
 };
