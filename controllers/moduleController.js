@@ -69,6 +69,7 @@ const getModulesV2 = async (req, res) => {
     if (!categoryId) {
       return res.status(400).json({ error: "Category not provided" });
     }
+
     const modules = await Module.find({ category: categoryId });
 
     res.status(200).json({ success: true, data: modules });
@@ -76,28 +77,34 @@ const getModulesV2 = async (req, res) => {
     res.status(500).json({ error: "Error fetching Modules" });
   }
 };
-
 const getModulesPaginated = async (req, res) => {
   try {
-    const { category, page = 1, limit = 10 } = req.query;
+    const { category, page = 1, limit = 10, years } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
     const skip = (pageNumber - 1) * pageSize;
-
+    
     let matchStage = {};
+    
     if (category) {
       matchStage.category = new mongoose.Types.ObjectId(category);
     }
+    
+    if (years) {
+      // Convert comma-separated string into an array
+      const yearsArray = years.split(",");
+      matchStage.years = { $in: yearsArray };
+    }
 
     const modules = await Module.aggregate([
-      { $match: matchStage }, // Filter by category if provided
-      { $sort: { _id: -1 } }, // Sort by newest first (change as needed)
+      { $match: matchStage }, // Apply filters
+      { $sort: { _id: -1 } }, // Sort by newest first
       { $skip: skip }, // Skip previous pages
       { $limit: pageSize }, // Limit results per page
     ]);
 
-    // Count total documents for pagination info
+    // Count total documents for pagination
     const totalCount = await Module.countDocuments(matchStage);
     const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -106,12 +113,11 @@ const getModulesPaginated = async (req, res) => {
       data: modules,
       currentPage: pageNumber,
       totalPages,
-      totalCount: totalCount,
+      totalCount,
       pageSize,
     });
   } catch (error) {
     console.log(error);
-
     res.status(500).json({ error: "Error fetching Modules" });
   }
 };
