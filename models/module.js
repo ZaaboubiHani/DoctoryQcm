@@ -9,7 +9,15 @@ const moduleSchema = new mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: true,
+    },
+    years: {
+      type: [
+        {
+          type: String,
+          enum: ["Residency", "Fourth", "Fifth", "Sixth"],
+          default: ["Residency"],
+        },
+      ],
     },
   },
   { versionKey: false, timestamps: true }

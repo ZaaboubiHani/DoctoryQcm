@@ -24,7 +24,7 @@ const createCourse = async (req, res) => {
 };
 const updateCourse = async (req, res) => {
   const courseId = req.params.id;
-  
+
   try {
     const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, {
       new: true,
@@ -41,11 +41,11 @@ const updateCourse = async (req, res) => {
   }
 };
 
-
 const deletePath = (filePath) => {
   return new Promise((resolve, reject) => {
     fs.unlink(filePath, (err) => {
-      if (err && err.code !== "ENOENT") reject(err); // Ignore "file not found" errors
+      if (err && err.code !== "ENOENT")
+        reject(err); // Ignore "file not found" errors
       else resolve();
     });
   });
@@ -75,7 +75,9 @@ const deleteCourse = async (req, res) => {
     // ✅ Now delete the course
     await Course.findByIdAndDelete(courseId);
 
-    res.status(200).json({ success: true, message: "Course deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Course deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error deleting Course" });
@@ -107,6 +109,7 @@ const getCoursesV2 = async (req, res) => {
     const courses = await Course.find({ module: moduleId })
       .populate("file") // ✅ Populating the file field if it exists
       .exec();
+
     res.status(200).json({ success: true, data: courses });
   } catch (error) {
     res.status(500).json({ error: "Error fetching Course" });

@@ -110,9 +110,6 @@ const deleteFile = async (req, res) => {
       return res.status(404).send({ message: "File not found in DB" });
     }
 
-    console.log("File object from DB:", file); // Debugging step
-    console.log("File URL from DB:", file.url);
-
     if (!file.url) {
       return res.status(400).send({ message: "File URL is missing in DB" });
     }
