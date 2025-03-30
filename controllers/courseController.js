@@ -102,12 +102,19 @@ const getCourses = async (req, res) => {
 const getCoursesV2 = async (req, res) => {
   try {
     const moduleId = req.query.module;
+    const year = req.query.year;
+    let query = {};
+    if (year) {
+      query.years = { $in: [year] }; 
+    }
 
     if (!moduleId) {
       return res.status(400).json({ error: "Module not provided" });
     }
-    const courses = await Course.find({ module: moduleId })
-      .populate("file") // ✅ Populating the file field if it exists
+    query.module = moduleId;
+
+    const courses = await Course.find(query)
+      .populate("file") 
       .exec();
 
     res.status(200).json({ success: true, data: courses });

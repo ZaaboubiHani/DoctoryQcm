@@ -62,21 +62,28 @@ const getModules = async (req, res) => {
     res.status(500).json({ error: "Error fetching Modules" });
   }
 };
-
 const getModulesV2 = async (req, res) => {
   try {
     const categoryId = req.query.category;
-    if (!categoryId) {
-      return res.status(400).json({ error: "Category not provided" });
+    const year = req.query.year;
+    let query = {};
+
+    if (year) {
+      query.years = { $in: [year] }; // Check if year exists in the years array
     }
 
-    const modules = await Module.find({ category: categoryId });
+    if (categoryId) {
+      query.category = categoryId;
+    }
+
+    const modules = await Module.find(query);
 
     res.status(200).json({ success: true, data: modules });
   } catch (error) {
     res.status(500).json({ error: "Error fetching Modules" });
   }
 };
+
 const getModulesPaginated = async (req, res) => {
   try {
     const { category, page = 1, limit = 10, years } = req.query;

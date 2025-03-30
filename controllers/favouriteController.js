@@ -242,13 +242,17 @@ const getFavouriteModules = async (req, res) => {
 const getFavouriteModulesV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
-    const categoryId = new mongoose.Types.ObjectId(req.query.category);
-    const favouriteModules = await Favourite.aggregate([
-      {
-        $match: {
-          user: userId,
-        },
-      },
+    const categoryId = req.query.category
+      ? new mongoose.Types.ObjectId(req.query.category)
+      : null;
+    const year = req.query.year; // Year is a string, and "years" is an array
+
+    const matchStage = {
+      user: userId,
+    };
+
+    const pipeline = [
+      { $match: matchStage },
       {
         $lookup: {
           from: "questions",
@@ -258,32 +262,46 @@ const getFavouriteModulesV2 = async (req, res) => {
         },
       },
       { $unwind: "$question" },
-      {
+    ];
+
+    // Apply category filter if provided
+    if (categoryId) {
+      pipeline.push({
         $match: {
           "question.category": categoryId,
         },
-      },
-      {
-        $group: {
-          _id: "$question.module",
-        },
-      },
+      });
+    }
+
+    pipeline.push(
       {
         $lookup: {
           from: "modules",
-          localField: "_id",
+          localField: "question.module",
           foreignField: "_id",
           as: "module",
         },
       },
-      { $unwind: "$module" },
-      {
-        $project: {
-          _id: "$module._id",
-          name: "$module.name",
+      { $unwind: "$module" }
+    );
+
+    // Apply year filter if provided
+    if (year) {
+      pipeline.push({
+        $match: {
+          "module.years": { $in: [year] },
         },
+      });
+    }
+
+    pipeline.push({
+      $group: {
+        _id: "$module._id",
+        name: { $first: "$module.name" },
       },
-    ]);
+    });
+
+    const favouriteModules = await Favourite.aggregate(pipeline);
 
     res.status(200).json({ success: true, data: favouriteModules });
   } catch (error) {
@@ -349,11 +367,11 @@ const getFavouriteCoursesV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
     const moduleId = new mongoose.Types.ObjectId(req.query.module);
-    const favouriteCourses = await Favourite.aggregate([
+    const year = req.query.year; // Year is a string, and "years" is an array
+    const baseUrl = process.env.BASE_URL;
+    const pipeline = [
       {
-        $match: {
-          user: userId,
-        },
+        $match: { user: userId },
       },
       {
         $lookup: {
@@ -365,9 +383,7 @@ const getFavouriteCoursesV2 = async (req, res) => {
       },
       { $unwind: "$question" },
       {
-        $match: {
-          "question.module": moduleId,
-        },
+        $match: { "question.module": moduleId }, // Module is obligatory
       },
       {
         $group: {
@@ -384,12 +400,44 @@ const getFavouriteCoursesV2 = async (req, res) => {
       },
       { $unwind: "$course" },
       {
-        $project: {
-          _id: "$course._id",
-          name: "$course.name",
+        $lookup: {
+          from: "files", // Assuming the collection is named "files"
+          localField: "course.file", // Reference field in the course model
+          foreignField: "_id",
+          as: "file",
         },
       },
-    ]);
+      {
+        $unwind: {
+          path: "$file",
+          preserveNullAndEmptyArrays: true, // If some courses don't have files, avoid errors
+        },
+      },
+    ];
+
+    // Apply year filter if provided
+    if (year) {
+      pipeline.push({
+        $match: { "course.years": { $in: [year] } },
+      });
+    }
+
+    pipeline.push({
+      $project: {
+        _id: "$course._id",
+        name: "$course.name",
+        file: {
+          _id: "$file._id",
+          type: "$file.type",
+          size: "$file.size",
+          url: {
+            $concat: [baseUrl, "$file.url"], // Correct way to concatenate
+          },
+        }, // Only returning relevant file fields
+      },
+    });
+
+    const favouriteCourses = await Favourite.aggregate(pipeline);
 
     res.status(200).json({ success: true, data: favouriteCourses });
   } catch (error) {
