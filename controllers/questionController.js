@@ -377,28 +377,38 @@ const getRandomQuestionsFromModule = async (req, res) => {
     res.status(500).json({ error: "Error fetching Questions" });
   }
 };
+
 const getRandomQuestionsFromModuleV2 = async (req, res) => {
   try {
-    const module = req.query.module;
+    const moduleId = req.query.module;
+    const year = req.query.year;
 
-    if (!mongoose.Types.ObjectId.isValid(module)) {
+    if (!mongoose.Types.ObjectId.isValid(moduleId)) {
       return res.status(400).json({ error: "Invalid module ID" });
     }
 
+    // Step 1: Find courses that belong to the module and include the given year
+    const courseFilter = { module: new mongoose.Types.ObjectId(moduleId) };
+    if (year) {
+      courseFilter.years = { $in: [year] }; // Ensure course has the specified year
+    }
+
+    const validCourses = await Course.find(courseFilter).select("_id");
+    const validCourseIds = validCourses.map((c) => c._id);
+
+    // Step 2: Fetch Questions only from valid courses
     const questions = await Question.aggregate([
-      { $match: { module: new mongoose.Types.ObjectId(module) } },
+      { $match: { module: new mongoose.Types.ObjectId(moduleId), course: { $in: validCourseIds } } },
       { $sample: { size: 40 } },
     ]);
 
-    // Ensure 'exam' is an object before assigning properties
-    const exam = { questions };
-
-    res.status(200).json({ success: true, data: exam });
+    res.status(200).json({ success: true, data: { questions } });
   } catch (error) {
-    console.error(error); // Log error for debugging
+    console.error(error);
     res.status(500).json({ error: "Error fetching Questions" });
   }
 };
+
 
 module.exports = {
   createQuestion,
