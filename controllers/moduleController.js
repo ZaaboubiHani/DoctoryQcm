@@ -62,6 +62,7 @@ const getModules = async (req, res) => {
     res.status(500).json({ error: "Error fetching Modules" });
   }
 };
+
 const getModulesV2 = async (req, res) => {
   try {
     const categoryId = req.query.category;
@@ -74,6 +75,22 @@ const getModulesV2 = async (req, res) => {
 
     if (categoryId) {
       query.category = categoryId;
+    }
+
+    const modules = await Module.find(query);
+
+    res.status(200).json({ success: true, data: modules });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching Modules" });
+  }
+};
+const getModulesByName = async (req, res) => {
+  try {
+    const name = req.query.name; // Assuming 'name' is the new query parameter
+    let query = {};
+
+    if (name) {
+      query.name = { $regex: new RegExp(name, 'i') }; // Case-insensitive regex search for name
     }
 
     const modules = await Module.find(query);
@@ -136,4 +153,5 @@ module.exports = {
   getModules,
   getModulesV2,
   getModulesPaginated,
+  getModulesByName,
 };

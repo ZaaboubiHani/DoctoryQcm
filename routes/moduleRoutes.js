@@ -8,6 +8,7 @@ const userJwt = require("../middlewares/userJwt");
 router.post("/", moduleController.createModule);
 router.get("/", userJwt, moduleController.getModules);
 router.get("/v2", userJwt, moduleController.getModulesV2);
+router.get("/name", userJwt, moduleController.getModulesByName);
 router.get("/page", userJwt, moduleController.getModulesPaginated);
 router.put("/:id", moduleController.updateModule);
 router.delete("/:id", moduleController.deleteModule);

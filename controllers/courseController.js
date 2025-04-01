@@ -26,6 +26,7 @@ const updateCourse = async (req, res) => {
   const courseId = req.params.id;
 
   try {
+    
     const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, {
       new: true,
     }).populate("file"); // ✅ Populate the file field if it exists
