@@ -4,13 +4,28 @@ const Course = require("../models/course");
 const Question = require("../models/question");
 const mongoose = require("mongoose");
 const Favourite = require("../models/favourite");
+const User = require("../models/user");
 
 const getStats = async (req, res) => {
   try {
-    const categories = await Category.countDocuments();
-    const modules = await Module.countDocuments();
-    const courses = await Course.countDocuments();
-    const questions = await Question.countDocuments();
+    const userId = new mongoose.Types.ObjectId(req.user.userId);
+     // Count categories for all users
+     const categories = await Category.countDocuments();
+
+     // Count modules for the specific user's year
+     const user = await User.findById(userId);
+     const userYear = user.year; // Assuming 'year' is the enum property in User model
+     const modules = await Module.countDocuments({ years: userYear });
+ 
+     // Count courses for the specific user's year
+     const courses = await Course.countDocuments({ years: { $in: [userYear] } });
+ 
+      // Get course IDs that match the user's year
+    const courseIds = await Course.find({ years: userYear }).distinct('_id');
+
+    // Count questions that belong to those courses
+    const questions = await Question.countDocuments({ course: { $in: courseIds } });
+
     res.status(200).json({
       success: true,
       data: { categories, modules, courses, questions },
@@ -442,16 +457,28 @@ const getAnswersPercentageByModule = async (req, res) => {
   }
 };
 
+
 const getModulesStatsV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
-    const categoryId = new mongoose.Types.ObjectId(req.query.category);
+    let matchStage = {};
+    let query = {};
+
+    if (req.query.category) {
+      matchStage.category = new mongoose.Types.ObjectId(req.query.category);
+    }
+
+    const year = req.query.year;
+    if (year) {
+      query.years = { $in: [year] }; // Check if the year exists in the years array
+    }
 
     const answersPerModule = await Module.aggregate([
       {
-        $match: {
-          category: categoryId,
-        },
+        $match: matchStage,
+      },
+      {
+        $match: query, // Apply year filter if provided
       },
       {
         $lookup: {
@@ -523,12 +550,12 @@ const getModulesStatsV2 = async (req, res) => {
 
     res.status(200).json({ success: true, data: answersPerModule });
   } catch (error) {
-    console.log(error);
-    res
-      .status(500)
-      .json({ error: "Error getting Answers Percentage by Module" });
+    console.error(error);
+    res.status(500).json({ error: "Error getting Answers Percentage by Module" });
   }
 };
+
+
 
 const getAnswersPercentageByCourse = async (req, res) => {
   try {
@@ -617,16 +644,28 @@ const getAnswersPercentageByCourse = async (req, res) => {
       .json({ error: "Error getting Answers Percentage by Course" });
   }
 };
+
 const getCoursesStatsV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
-    const moduleId = new mongoose.Types.ObjectId(req.query.module);
+    let matchStage = {};
+    let query = {};
+
+    if (req.query.module) {
+      matchStage.module = new mongoose.Types.ObjectId(req.query.module);
+    }
+
+    const year = req.query.year;
+    if (year) {
+      query.years = { $in: [year] }; // Check if the year exists in the years array
+    }
 
     const answersPerCourse = await Course.aggregate([
       {
-        $match: {
-          module: moduleId,
-        },
+        $match: matchStage,
+      },
+      {
+        $match: query, // Apply year filter if provided
       },
       {
         $lookup: {
@@ -698,12 +737,11 @@ const getCoursesStatsV2 = async (req, res) => {
 
     res.status(200).json({ success: true, data: answersPerCourse });
   } catch (error) {
-    console.log(error);
-    res
-      .status(500)
-      .json({ error: "Error getting Answers Percentage by Course" });
+    console.error(error);
+    res.status(500).json({ error: "Error getting Answers Percentage by Course" });
   }
 };
+
 
 const getFavouriteStats = async (req, res) => {
   try {
