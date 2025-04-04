@@ -9,22 +9,24 @@ const User = require("../models/user");
 const getStats = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
-     // Count categories for all users
-     const categories = await Category.countDocuments();
+    // Count categories for all users
+    const categories = await Category.countDocuments();
 
-     // Count modules for the specific user's year
-     const user = await User.findById(userId);
-     const userYear = user.year; // Assuming 'year' is the enum property in User model
-     const modules = await Module.countDocuments({ years: userYear });
- 
-     // Count courses for the specific user's year
-     const courses = await Course.countDocuments({ years: { $in: [userYear] } });
- 
-      // Get course IDs that match the user's year
-    const courseIds = await Course.find({ years: userYear }).distinct('_id');
+    // Count modules for the specific user's year
+    const user = await User.findById(userId);
+    const userYear = user.year; // Assuming 'year' is the enum property in User model
+    const modules = await Module.countDocuments({ years: { $in: [userYear] } });
+
+    // Count courses for the specific user's year
+    const courses = await Course.countDocuments({ years: { $in: [userYear] } });
+    
+    // Get course IDs that match the user's year
+    const courseIds = await Course.find({ years: { $in: [userYear] } }).distinct("_id");
 
     // Count questions that belong to those courses
-    const questions = await Question.countDocuments({ course: { $in: courseIds } });
+    const questions = await Question.countDocuments({
+      course: { $in: courseIds },
+    });
 
     res.status(200).json({
       success: true,
@@ -457,7 +459,6 @@ const getAnswersPercentageByModule = async (req, res) => {
   }
 };
 
-
 const getModulesStatsV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
@@ -551,11 +552,11 @@ const getModulesStatsV2 = async (req, res) => {
     res.status(200).json({ success: true, data: answersPerModule });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error getting Answers Percentage by Module" });
+    res
+      .status(500)
+      .json({ error: "Error getting Answers Percentage by Module" });
   }
 };
-
-
 
 const getAnswersPercentageByCourse = async (req, res) => {
   try {
@@ -738,10 +739,11 @@ const getCoursesStatsV2 = async (req, res) => {
     res.status(200).json({ success: true, data: answersPerCourse });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error getting Answers Percentage by Course" });
+    res
+      .status(500)
+      .json({ error: "Error getting Answers Percentage by Course" });
   }
 };
-
 
 const getFavouriteStats = async (req, res) => {
   try {
