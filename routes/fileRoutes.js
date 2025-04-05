@@ -4,6 +4,7 @@ const fileController = require("../controllers/fileController");
 const adminJwt = require("../middlewares/adminJwt");
 
 router.post("/doc", adminJwt, fileController.uploadDocument);
+router.post("/apk", adminJwt, fileController.uploadAPK);
 router.delete("/:id", adminJwt, fileController.deleteFile);
 
 module.exports = router;
