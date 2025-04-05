@@ -42,6 +42,7 @@ const documentFilter = (req, file, cb) => {
   }
 };
 
+
 // Multer instance for document uploads with increased file size limit (100MB)
 const uploadDoc = multer({
   storage: createStorage("documents"),
@@ -82,6 +83,67 @@ const uploadDocument = async (req, res) => {
       data: newFile,
     });
   } catch (err) {
+    res.status(err.status || 500).send({
+      message: err.message || "Error occurred during document upload.",
+      error: err,
+    });
+  }
+};
+// File filter for documents (PDF, Word)
+const apkFilter = (req, file, cb) => {
+  const filetypes = /apk/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = file.mimetype === 'application/vnd.android.package-archive'; // Match the specific MIME type
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb("Error: Only APK files are allowed!");
+  }
+};
+
+const uploadApk = multer({
+  storage: createStorage("versions"),
+  fileFilter: apkFilter,
+  limits: { fileSize: 100 * 1024 * 1024 }, // Set limit to 100MB
+}).single("apk");
+
+
+// Upload document handler
+const uploadAPK = async (req, res) => {
+  try {
+    await new Promise((resolve, reject) => {
+      uploadApk(req, res, (err) => {
+        if (err) {
+          if (err.code === "LIMIT_FILE_SIZE") {
+            return reject({ status: 413, message: "File size exceeds limit (100MB)." });
+          }
+          return reject(err);
+        }
+        resolve();
+      });
+    });
+
+    if (!req.file) {
+      return res.status(400).send({ message: "No document selected" });
+    }
+
+    const fileUrl = req.file.path.replace(/\\/g, "/");
+    const newFile = new File({
+      url: fileUrl,
+      type: req.file.mimetype,
+      size: req.file.size,
+    });
+
+    await newFile.save();
+
+    res.send({
+      success: true,
+      data: newFile,
+    });
+  } catch (err) {
+    console.log("Error during file upload:", err);
+    
     res.status(err.status || 500).send({
       message: err.message || "Error occurred during document upload.",
       error: err,
@@ -139,5 +201,6 @@ const deleteFile = async (req, res) => {
 
 module.exports = {
   uploadDocument,
+  uploadAPK,
   deleteFile,
 };
