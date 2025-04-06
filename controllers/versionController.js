@@ -101,10 +101,24 @@ const getVersions = async (req, res) => {
   }
 };
 
+const getLastVersion = async (req, res) => {
+  try {
+    const latestVersion = await Version.findOne()
+      .sort({ createdAt: -1 }) // newest first
+      .populate("file")
+      .exec();
+
+    res.status(200).json({ success: true, data: latestVersion });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching latest Version" });
+  }
+};
+
 
 module.exports = {
   createVersion,
   updateVersion,
   deleteVersion,
   getVersions,
+  getLastVersion,
 };

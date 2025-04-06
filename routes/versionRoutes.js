@@ -8,6 +8,7 @@ const adminJwt = require("../middlewares/adminJwt");
 
 router.post("/", adminJwt, versionController.createVersion);
 router.get("/", adminJwt, versionController.getVersions);
+router.get("/last", versionController.getLastVersion);
 router.put("/:id", adminJwt, versionController.updateVersion);
 router.delete("/:id", adminJwt, versionController.deleteVersion);
 
