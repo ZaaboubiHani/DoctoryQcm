@@ -5,8 +5,23 @@ const Course = require("../models/course");
 
 const createCourse = async (req, res) => {
   try {
+    const { module: moduleId } = req.body;
+
+    // Make sure the module ID is provided
+    if (!moduleId) {
+      return res.status(400).json({ error: "Module ID is required" });
+    }
+
+    // Find the highest index within this module
+    const lastCourse = await Course.findOne()
+      .sort({ index: -1 })
+      .limit(1);
+
+    const nextIndex = lastCourse ? lastCourse.index + 1 : 1;
+
     const newCourse = new Course({
       ...req.body,
+      index: nextIndex,
     });
 
     let createdCourse = await newCourse.save();
@@ -22,11 +37,11 @@ const createCourse = async (req, res) => {
     res.status(500).json({ error: "Error creating Course" });
   }
 };
+
 const updateCourse = async (req, res) => {
   const courseId = req.params.id;
 
   try {
-    
     const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, {
       new: true,
     }).populate("file"); // ✅ Populate the file field if it exists
@@ -106,7 +121,7 @@ const getCoursesV2 = async (req, res) => {
     const year = req.query.year;
     let query = {};
     if (year) {
-      query.years = { $in: [year] }; 
+      query.years = { $in: [year] };
     }
 
     if (!moduleId) {
@@ -115,7 +130,8 @@ const getCoursesV2 = async (req, res) => {
     query.module = moduleId;
 
     const courses = await Course.find(query)
-      .populate("file") 
+      .populate("file")
+      .sort({ index: 1 })
       .exec();
 
     res.status(200).json({ success: true, data: courses });

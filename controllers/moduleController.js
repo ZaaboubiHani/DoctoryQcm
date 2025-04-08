@@ -3,14 +3,21 @@ const mongoose = require("mongoose");
 
 const createModule = async (req, res) => {
   try {
+    // Get the module with the highest index
+    const lastModule = await Module.findOne().sort({ index: -1 }).limit(1);
+
+    const nextIndex = lastModule ? lastModule.index + 1 : 1; // start from 1 if no modules exist
+
     const newModule = new Module({
       ...req.body,
+      index: nextIndex,
     });
 
     const createdModule = await newModule.save();
 
     res.status(201).json({ success: true, data: createdModule });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error creating Module" });
   }
 };
@@ -77,20 +84,21 @@ const getModulesV2 = async (req, res) => {
       query.category = categoryId;
     }
 
-    const modules = await Module.find(query);
+    const modules = await Module.find(query).sort({ index: 1 });
 
     res.status(200).json({ success: true, data: modules });
   } catch (error) {
     res.status(500).json({ error: "Error fetching Modules" });
   }
 };
+
 const getModulesByName = async (req, res) => {
   try {
     const name = req.query.name; // Assuming 'name' is the new query parameter
     let query = {};
 
     if (name) {
-      query.name = { $regex: new RegExp(name, 'i') }; // Case-insensitive regex search for name
+      query.name = { $regex: new RegExp(name, "i") }; // Case-insensitive regex search for name
     }
 
     const modules = await Module.find(query);
@@ -103,18 +111,14 @@ const getModulesByName = async (req, res) => {
 
 const getModulesPaginated = async (req, res) => {
   try {
-    const { category, page = 1, limit = 10, years } = req.query;
+    const { category, years } = req.query;
 
-    const pageNumber = parseInt(page, 10);
-    const pageSize = parseInt(limit, 10);
-    const skip = (pageNumber - 1) * pageSize;
-    
     let matchStage = {};
-    
+
     if (category) {
       matchStage.category = new mongoose.Types.ObjectId(category);
     }
-    
+
     if (years) {
       // Convert comma-separated string into an array
       const yearsArray = years.split(",");
@@ -122,23 +126,14 @@ const getModulesPaginated = async (req, res) => {
     }
 
     const modules = await Module.aggregate([
-      { $match: matchStage }, // Apply filters
-      { $sort: { _id: -1 } }, // Sort by newest first
-      { $skip: skip }, // Skip previous pages
-      { $limit: pageSize }, // Limit results per page
+      { $match: matchStage },
+      { $sort: { index: 1 } },
     ]);
-
-    // Count total documents for pagination
-    const totalCount = await Module.countDocuments(matchStage);
-    const totalPages = Math.ceil(totalCount / pageSize);
 
     res.status(200).json({
       success: true,
       data: modules,
-      currentPage: pageNumber,
-      totalPages,
-      totalCount,
-      pageSize,
+      totalCount: modules.length,
     });
   } catch (error) {
     console.log(error);
