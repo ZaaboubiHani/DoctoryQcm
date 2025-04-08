@@ -6,6 +6,9 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    index: {
+      type: Number,
+    },
     module: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Module",

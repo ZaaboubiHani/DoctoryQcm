@@ -6,6 +6,9 @@ const moduleSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    index: {
+      type: Number,
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
