@@ -267,6 +267,25 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const resetAllDeviceTokens = async (req, res) => {
+  try {
+    const result = await User.updateMany({}, { deviceToken: "" });
+
+    res.status(200).json({
+      success: true,
+      message: `Device tokens reset for ${result.modifiedCount} users.`,
+    });
+  } catch (error) {
+    console.error("Error resetting device tokens:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la réinitialisation des deviceToken.",
+    });
+  }
+};
+
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -275,4 +294,5 @@ module.exports = {
   getUsers,
   deleteUser,
   getSingleUser,
+  resetAllDeviceTokens,
 };
