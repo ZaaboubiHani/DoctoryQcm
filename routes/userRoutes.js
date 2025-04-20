@@ -12,5 +12,7 @@ router.get("/me", userJwt, userController.getMe);
 router.get("/user/:id", adminJwt, userController.getSingleUser);
 router.get("/", adminJwt, userController.getUsers);
 router.delete("/:id", adminJwt, userController.deleteUser);
+router.put("/reset/device-tokens", adminJwt, userController.resetAllDeviceTokens);
+
 module.exports = router;
 
