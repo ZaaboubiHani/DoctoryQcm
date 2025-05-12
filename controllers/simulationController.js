@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const Category = require("../models/category");
 const Question = require("../models/question");
 const Simulation = require("../models/simulation");
+const User = require("../models/user");
+const Course = require("../models/course");
 
 const generateSimulation = async (req, res) => {
   try {
@@ -40,35 +42,42 @@ const generateSimulation = async (req, res) => {
 const generateSimulationV2 = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const categoryIds = await Category.find({}, "_id");
-    let questions = [];
+    const user = await User.findById(userId);
+    const userYear = user.year;
 
-    for (const category of categoryIds) {
-      const randomQuestions = await Question.aggregate([
-        { $match: { category: new mongoose.Types.ObjectId(category._id) } },
-        { $sample: { size: 50 } },
-        { $project: { _id: 1 } },
-      ]);
+    // Step 1: Get course IDs matching the user's year
+    const courses = await Course.find({ years: userYear }, "_id");
+    const courseIds = courses.map((c) => c._id);
+    
 
-      questions = questions.concat(
-        randomQuestions.map((question) => ({
-          question: question._id,
-          answers: [],
-        }))
-      );
+    if (courseIds.length === 0) {
+      return res.status(404).json({ error: "No courses found for this year." });
     }
 
+    // Step 2: Sample 150 random questions from those courses
+    const randomQuestions = await Question.aggregate([
+      { $match: { course: { $in: courseIds } } },
+      { $sample: { size: 150 } },
+      { $project: { _id: 1 } },
+    ]);
+
+    const questions = randomQuestions.map((q) => ({
+      question: q._id,
+      answers: [],
+    }));
+
+    // Step 3: Create and save the simulation
     const simulation = new Simulation({
       user: userId,
-      questions: questions,
+      questions,
     });
 
     await simulation.save();
 
-    // Populate the questions
+    // Step 4: Populate the questions with text, category, etc.
     await simulation.populate({
       path: "questions.question",
-      select: "text category choices correctAnswers", // Select only relevant fields
+      select: "text category choices correctAnswers",
       populate: {
         path: "category",
         model: "Category",
@@ -76,14 +85,12 @@ const generateSimulationV2 = async (req, res) => {
       },
     });
 
-    // Convert Mongoose document to plain object
+    // Step 5: Format the response
     const responseSimulation = simulation.toObject();
-
-    // Flatten the questions array
     responseSimulation.questions = responseSimulation.questions.map((q) => ({
-      ...q.question, // Spread the properties of the question object
-      answers: q.answers, // Keep the answers array
-      category: q.question?.category?.name || null, // Ensure safe access
+      ...q.question,
+      answers: q.answers,
+      category: q.question?.category?.name || null,
     }));
 
     res.status(201).json({ success: true, data: responseSimulation });
@@ -92,6 +99,7 @@ const generateSimulationV2 = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 const deleteSimulation = async (req, res) => {
   try {
