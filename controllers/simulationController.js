@@ -45,28 +45,49 @@ const generateSimulationV2 = async (req, res) => {
     const user = await User.findById(userId);
     const userYear = user.year;
 
-    // Step 1: Get course IDs matching the user's year
-    const courses = await Course.find({ years: userYear }, "_id");
-    const courseIds = courses.map((c) => c._id);
-    
+    let questions = [];
 
-    if (courseIds.length === 0) {
-      return res.status(404).json({ error: "No courses found for this year." });
+    if (userYear === "Residency") {
+      // Special case: Get 50 random questions from each category
+      const categoryIds = await Category.find({}, "_id");
+
+      for (const category of categoryIds) {
+        const randomQuestions = await Question.aggregate([
+          { $match: { category: new mongoose.Types.ObjectId(category._id) } },
+          { $sample: { size: 50 } },
+          { $project: { _id: 1 } },
+        ]);
+
+        questions = questions.concat(
+          randomQuestions.map((question) => ({
+            question: question._id,
+            answers: [],
+          }))
+        );
+      }
+    } else {
+      // Regular case: Get course IDs matching the user's year
+      const courses = await Course.find({ years: userYear }, "_id");
+      const courseIds = courses.map((c) => c._id);
+
+      if (courseIds.length === 0) {
+        return res.status(404).json({ error: "No courses found for this year." });
+      }
+
+      // Sample 150 random questions from those courses
+      const randomQuestions = await Question.aggregate([
+        { $match: { course: { $in: courseIds } } },
+        { $sample: { size: 150 } },
+        { $project: { _id: 1 } },
+      ]);
+
+      questions = randomQuestions.map((q) => ({
+        question: q._id,
+        answers: [],
+      }));
     }
 
-    // Step 2: Sample 150 random questions from those courses
-    const randomQuestions = await Question.aggregate([
-      { $match: { course: { $in: courseIds } } },
-      { $sample: { size: 150 } },
-      { $project: { _id: 1 } },
-    ]);
-
-    const questions = randomQuestions.map((q) => ({
-      question: q._id,
-      answers: [],
-    }));
-
-    // Step 3: Create and save the simulation
+    // Create and save the simulation
     const simulation = new Simulation({
       user: userId,
       questions,
@@ -74,7 +95,7 @@ const generateSimulationV2 = async (req, res) => {
 
     await simulation.save();
 
-    // Step 4: Populate the questions with text, category, etc.
+    // Populate the questions with text, category, etc.
     await simulation.populate({
       path: "questions.question",
       select: "text category choices correctAnswers",
@@ -85,7 +106,7 @@ const generateSimulationV2 = async (req, res) => {
       },
     });
 
-    // Step 5: Format the response
+    // Format the response
     const responseSimulation = simulation.toObject();
     responseSimulation.questions = responseSimulation.questions.map((q) => ({
       ...q.question,
