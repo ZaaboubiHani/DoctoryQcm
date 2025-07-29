@@ -19,7 +19,7 @@ const getStats = async (req, res) => {
 
     // Count courses for the specific user's year
     const courses = await Course.countDocuments({ years: { $in: [userYear] } });
-    
+
     // Get course IDs that match the user's year
     const courseIds = await Course.find({ years: { $in: [userYear] } }).distinct("_id");
 
@@ -292,13 +292,29 @@ const getAnswersPercentageByCategory = async (req, res) => {
 const getCategoriesStatsV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
+    const user = await User.findById(userId);
+    const userYear = user.year;
+
+    const validCourses = await Course.find({ years: { $in: [userYear] } }).select("_id");
+    const validCourseIds = validCourses.map((c) => c._id);
 
     const answersPerCategory = await Category.aggregate([
       {
         $lookup: {
           from: "questions",
-          localField: "_id",
-          foreignField: "category",
+          let: { categoryId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$category", "$$categoryId"] },
+                    { $in: ["$course", validCourseIds] },
+                  ],
+                },
+              },
+            },
+          ],
           as: "questions",
         },
       },
@@ -320,16 +336,10 @@ const getCategoriesStatsV2 = async (req, res) => {
             {
               $group: {
                 _id: { question: "$question", user: "$user" },
-                uniqueAnswers: {
-                  $addToSet: { question: "$question", user: "$user" },
-                },
               },
             },
             {
-              $project: {
-                _id: 0,
-                answers: { $size: "$uniqueAnswers" },
-              },
+              $count: "answeredQuestions",
             },
           ],
           as: "answers",
@@ -340,7 +350,9 @@ const getCategoriesStatsV2 = async (req, res) => {
           _id: 1,
           name: 1,
           totalQuestions: { $size: "$questions" },
-          answeredQuestions: { $sum: "$answers.answers" },
+          answeredQuestions: {
+            $ifNull: [{ $arrayElemAt: ["$answers.answeredQuestions", 0] }, 0],
+          },
           percentage: {
             $cond: [
               { $eq: [{ $size: "$questions" }, 0] },
@@ -349,7 +361,12 @@ const getCategoriesStatsV2 = async (req, res) => {
                 $multiply: [
                   {
                     $divide: [
-                      { $sum: "$answers.answers" },
+                      {
+                        $ifNull: [
+                          { $arrayElemAt: ["$answers.answeredQuestions", 0] },
+                          0,
+                        ],
+                      },
                       { $size: "$questions" },
                     ],
                   },
@@ -387,6 +404,7 @@ const getAnswersPercentageByModule = async (req, res) => {
           from: "questions",
           localField: "_id",
           foreignField: "module",
+
           as: "questions",
         },
       },
@@ -462,6 +480,11 @@ const getAnswersPercentageByModule = async (req, res) => {
 const getModulesStatsV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
+    const user = await User.findById(userId);
+    const userYear = user.year;
+
+    const validCourses = await Course.find({ years: { $in: [userYear] } }).select("_id");
+    const validCourseIds = validCourses.map((c) => c._id);
     let matchStage = {};
     let query = {};
 
@@ -479,13 +502,25 @@ const getModulesStatsV2 = async (req, res) => {
         $match: matchStage,
       },
       {
-        $match: query, // Apply year filter if provided
+        $match: query,
       },
       {
         $lookup: {
           from: "questions",
           localField: "_id",
           foreignField: "module",
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                   
+                    { $in: ["$course", validCourseIds] },
+                  ],
+                },
+              },
+            },
+          ],
           as: "questions",
         },
       },

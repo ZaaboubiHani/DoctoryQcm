@@ -48,12 +48,17 @@ const generateSimulationV2 = async (req, res) => {
     let questions = [];
 
     if (userYear === "Residency") {
+      const courseFilter = {};
+      courseFilter.years = { $in: [userYear] };
+      const validCourses = await Course.find(courseFilter).select("_id");
+      const validCourseIds = validCourses.map((c) => c._id);
+
       // Special case: Get 50 random questions from each category
       const categoryIds = await Category.find({}, "_id");
 
       for (const category of categoryIds) {
         const randomQuestions = await Question.aggregate([
-          { $match: { category: new mongoose.Types.ObjectId(category._id) } },
+          { $match: { category: new mongoose.Types.ObjectId(category._id), course: { $in: validCourseIds } } },
           { $sample: { size: 50 } },
           { $project: { _id: 1 } },
         ]);
