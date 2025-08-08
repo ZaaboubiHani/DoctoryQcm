@@ -8,6 +8,6 @@ router.get("/", userJwt, residencyController.getResidencies);
 router.get("/v2/", userJwt, residencyController.getResidenciesV2);
 
 router.post("/", residencyController.createResidency);
-// router.delete("/:id", adminJwt, residencyController.deleteResidency);
+router.delete("/:id",  residencyController.deleteResidency);
 
 module.exports = router;

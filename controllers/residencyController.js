@@ -1,4 +1,5 @@
 const Residency = require("../models/residency");
+const ResidencyQuestion = require('../models/residencyQuestion');
 
 const createResidency = async (req, res) => {
   try {
@@ -16,8 +17,10 @@ const createResidency = async (req, res) => {
   }
 };
 
+
 const deleteResidency = async (req, res) => {
   const residencyId = req.params.id;
+
   try {
     const deletedResidency = await Residency.findByIdAndDelete(residencyId);
 
@@ -25,8 +28,12 @@ const deleteResidency = async (req, res) => {
       return res.status(404).json({ error: "Residency not found" });
     }
 
-    res.status(200).json({ message: "Residency deleted successfully" });
+    // Delete related questions
+    await ResidencyQuestion.deleteMany({ residency: residencyId });
+
+    res.status(200).json({ message: "Residency and related questions deleted successfully" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error deleting Residency" });
   }
 };

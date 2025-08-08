@@ -408,6 +408,46 @@ const getRandomQuestionsFromModuleV2 = async (req, res) => {
     res.status(500).json({ error: "Error fetching Questions" });
   }
 };
+const getRandomQuestionsFromCategory = async (req, res) => {
+  try {
+    const categoryId = req.query.category;
+    const year = req.query.year;
+
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+
+    // Step 1: Find modules that belong to the category
+    const moduleFilter = { category: new mongoose.Types.ObjectId(categoryId) };
+    const validModules = await Module.find(moduleFilter).select("_id");
+    const validModuleIds = validModules.map((m) => m._id);
+
+    // Step 2: Find courses inside those modules, optionally filtered by year
+    const courseFilter = { module: { $in: validModuleIds } };
+    if (year) {
+      courseFilter.years = { $in: [year] }; // course must include the year
+    }
+
+    const validCourses = await Course.find(courseFilter).select("_id");
+    const validCourseIds = validCourses.map((c) => c._id);
+
+    // Step 3: Fetch random questions from those courses
+    const questions = await Question.aggregate([
+      {
+        $match: {
+          module: { $in: validModuleIds },
+          course: { $in: validCourseIds },
+        },
+      },
+      { $sample: { size: 50 } }, // adjust size if needed
+    ]);
+
+    res.status(200).json({ success: true, data: { questions } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error fetching Questions" });
+  }
+};
 
 
 module.exports = {
@@ -423,4 +463,5 @@ module.exports = {
   getRandomQuestionsFromModuleV2,
   getQuestionsPaginated,
   getSingleQuestionV2,
+  getRandomQuestionsFromCategory
 };

@@ -14,7 +14,7 @@ const residencyQuestionSchema = new mongoose.Schema(
         {
           letter: {
             type: String,
-            enum: ["A", "B", "C", "D", "E", "F"],
+            enum: ["A", "B", "C", "D", "E", "F","G","H"],
             required: true,
           },
           text: {
