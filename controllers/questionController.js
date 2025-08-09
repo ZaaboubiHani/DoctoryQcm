@@ -408,6 +408,8 @@ const getRandomQuestionsFromModuleV2 = async (req, res) => {
     res.status(500).json({ error: "Error fetching Questions" });
   }
 };
+
+
 const getRandomQuestionsFromCategory = async (req, res) => {
   try {
     const categoryId = req.query.category;
