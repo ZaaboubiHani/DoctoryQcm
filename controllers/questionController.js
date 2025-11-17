@@ -70,6 +70,8 @@ const deleteQuestion = async (req, res) => {
 
 const getQuestions = async (req, res) => {
   try {
+   
+    
     const course = req.query.course;
     if (!course) {
       return res
@@ -86,6 +88,7 @@ const getQuestions = async (req, res) => {
 
 const getQuestionsWithDetails = async (req, res) => {
   try {
+    
     const course = req.query.course;
     const userId = req.user.userId;
 
@@ -254,6 +257,7 @@ const getQuestionsPaginated = async (req, res) => {
         $project: {
           _id: 1,
           text: 1,
+          index: 1,
           category: 1,
           module: 1,
           course: 1,

@@ -19,6 +19,9 @@ const questionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    index: {
+      type: Number,
+    },
     choices: [
       {
         letter: {

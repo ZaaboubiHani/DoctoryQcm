@@ -41,14 +41,6 @@ const updateNote = async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    await Note.deleteMany({
-      user: req.user.userId,
-      question: req.body.question,
-      _id: {
-        $ne: new mongoose.Types.ObjectId(noteId),
-      },
-    });
-
     const updatedNote = await Note.findByIdAndUpdate(noteId, req.body, {
       new: true,
     });
@@ -71,14 +63,6 @@ const updateNoteV2 = async (req, res) => {
     if (note.user.id !== req.user.userId) {
       return res.status(403).json({ error: "Unauthorized" });
     }
-
-    await Note.deleteMany({
-      user: req.user.userId,
-      question: req.body.question,
-      _id: {
-        $ne: new mongoose.Types.ObjectId(noteId),
-      },
-    });
 
     const updatedNote = await Note.findByIdAndUpdate(noteId, req.body, {
       new: true,
