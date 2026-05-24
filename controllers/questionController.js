@@ -108,7 +108,7 @@ const getQuestionsWithDetails = async (req, res) => {
         $match: { course: courseId },
       },
       {
-        $sort: { createdAt: -1 },
+        $sort: { index: 1 },
       },
       {
         $lookup: {
@@ -172,7 +172,7 @@ const getQuestionsWithDetailsV2 = async (req, res) => {
         $match: { course: courseId },
       },
       {
-        $sort: { createdAt: -1 },
+        $sort: { index: 1 },
       },
       {
         $lookup: {
@@ -254,7 +254,7 @@ const getQuestionsPaginated = async (req, res) => {
         $match: { course: courseId },
       },
       {
-        $sort: { index: -1 },
+        $sort: { index: 1 },
       },
 
       {
