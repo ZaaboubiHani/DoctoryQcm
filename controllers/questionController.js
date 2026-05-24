@@ -254,7 +254,7 @@ const getQuestionsPaginated = async (req, res) => {
         $match: { course: courseId },
       },
       {
-        $sort: { createdAt: -1 },
+        $sort: { index: -1 },
       },
 
       {
