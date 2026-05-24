@@ -110,7 +110,7 @@ const updateUser = async (req, res) => {
       phoneNumber: req.body.phoneNumber,
       deviceToken: req.body.deviceToken,
       isValidated: req.body.isValidated,
-      yearId: req.body.year,
+      // yearId: req.body.year,
     };
     if (req.body.password) {
       userData.passwordHash = await bcrypt.hash(req.body.password, 10);
