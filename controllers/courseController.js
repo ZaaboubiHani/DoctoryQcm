@@ -122,7 +122,8 @@ const getCoursesV2 = async (req, res) => {
     const year = req.query.year;
     let query = {};
     if (year) {
-      query.yearIds = { $in: [new mongoose.Types.ObjectId(year.trim())] };
+      // query.yearIds = { $in: [new mongoose.Types.ObjectId(year.trim())] };
+      query.years = { $in: [year] };
     }
 
     if (!moduleId) {
