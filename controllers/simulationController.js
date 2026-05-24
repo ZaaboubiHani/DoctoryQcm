@@ -43,88 +43,90 @@ const generateSimulationV2 = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    const userYear = user.year;
+    const userYear = user.yearId;
 
-    let questions = [];
+    let questionIds = [];
 
     if (userYear === "Residency") {
-      const courseFilter = {};
-      courseFilter.years = { $in: [userYear] };
-      const validCourses = await Course.find(courseFilter).select("_id");
+      // Get valid courses for Residency
+      const validCourses = await Course.find(
+        { yearIds: { $in: [userYear] } },
+        "_id"
+      );
       const validCourseIds = validCourses.map((c) => c._id);
 
-      // Special case: Get 50 random questions from each category
-      const categoryIds = await Category.find({}, "_id");
+      // Get all categories
+      const categories = await Category.find({}, "_id");
 
-      for (const category of categoryIds) {
+      // Get 50 random questions per category
+      for (const category of categories) {
         const randomQuestions = await Question.aggregate([
-          { $match: { category: new mongoose.Types.ObjectId(category._id), course: { $in: validCourseIds } } },
+          {
+            $match: {
+              category: new mongoose.Types.ObjectId(category._id),
+              course: { $in: validCourseIds },
+            },
+          },
           { $sample: { size: 50 } },
           { $project: { _id: 1 } },
         ]);
 
-        questions = questions.concat(
-          randomQuestions.map((question) => ({
-            question: question._id,
-            answers: [],
-          }))
-        );
+        questionIds.push(...randomQuestions.map((q) => q._id));
       }
     } else {
-      // Regular case: Get course IDs matching the user's year
-      const courses = await Course.find({ years: userYear }, "_id");
+      // Regular years
+      const courses = await Course.find(
+        { yearIds: userYear },
+        "_id"
+      );
       const courseIds = courses.map((c) => c._id);
 
       if (courseIds.length === 0) {
-        return res.status(404).json({ error: "No courses found for this year." });
+        return res
+          .status(404)
+          .json({ error: "No courses found for this year." });
       }
 
-      // Sample 150 random questions from those courses
       const randomQuestions = await Question.aggregate([
         { $match: { course: { $in: courseIds } } },
         { $sample: { size: 150 } },
         { $project: { _id: 1 } },
       ]);
 
-      questions = randomQuestions.map((q) => ({
-        question: q._id,
-        answers: [],
-      }));
+      questionIds = randomQuestions.map((q) => q._id);
     }
 
-    // Create and save the simulation
-    const simulation = new Simulation({
-      user: userId,
-      questions,
-    });
-
-    await simulation.save();
-
-    // Populate the questions with text, category, etc.
-    await simulation.populate({
-      path: "questions.question",
-      select: "text category choices correctAnswers",
-      populate: {
+    // Fetch full question data + populate category
+    const questions = await Question.find({ _id: { $in: questionIds } })
+      .select("text category choices correctAnswers")
+      .populate({
         path: "category",
         model: "Category",
         select: "name",
-      },
-    });
+      });
 
-    // Format the response
-    const responseSimulation = simulation.toObject();
-    responseSimulation.questions = responseSimulation.questions.map((q) => ({
-      ...q.question,
-      answers: q.answers,
-      category: q.question?.category?.name || null,
+    // Format response (same shape as before)
+    const formattedQuestions = questions.map((q) => ({
+      _id: q._id,
+      text: q.text,
+      choices: q.choices,
+      correctAnswers: q.correctAnswers,
+      category: q.category?.name || null,
+      answers: [], // frontend-compatible
     }));
 
-    res.status(201).json({ success: true, data: responseSimulation });
+    res.status(200).json({
+      success: true,
+      data: {
+        questions: formattedQuestions,
+      },
+    });
   } catch (error) {
-    console.error("Error generating simulation:", error);
+    console.error("Error generating questions:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 
 const deleteSimulation = async (req, res) => {

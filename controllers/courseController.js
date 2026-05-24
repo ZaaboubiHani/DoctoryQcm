@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const File = require("../models/file"); // Adjust the path to your File model
 const Course = require("../models/course");
+const mongoose = require("mongoose");
 
 const createCourse = async (req, res) => {
   try {
@@ -121,7 +122,7 @@ const getCoursesV2 = async (req, res) => {
     const year = req.query.year;
     let query = {};
     if (year) {
-      query.years = { $in: [year] };
+      query.yearIds = { $in: [new mongoose.Types.ObjectId(year.trim())] };
     }
 
     if (!moduleId) {
@@ -159,6 +160,40 @@ const getCoursesByName = async (req, res) => {
   }
 };
 
+
+const reorderCourses = async (req, res) => {
+  try {
+    const coursesOrder = req.body;
+
+    if (!Array.isArray(coursesOrder)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payload format",
+      });
+    }
+
+    const bulkOps = coursesOrder.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { $set: { index: item.index } },
+      },
+    }));
+
+    await Course.bulkWrite(bulkOps);
+
+    res.status(200).json({
+      success: true,
+      message: "Courses reordered successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: "Error reordering courses",
+    });
+  }
+};
+
 module.exports = {
   createCourse,
   updateCourse,
@@ -166,4 +201,5 @@ module.exports = {
   getCourses,
   getCoursesByName,
   getCoursesV2,
+  reorderCourses,
 };

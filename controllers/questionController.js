@@ -12,10 +12,14 @@ const createQuestion = async (req, res) => {
     const module = await Module.findById(course.module);
     const category = await Category.findById(module.category);
 
+    // Count questions for this course
+    const count = await Question.countDocuments({ course: course._id });
+
     const newQuestion = new Question({
-      category: category.id,
-      module: module.id,
-      course: course.id,
+      category: category._id,
+      module: module._id,
+      course: course._id,
+      index: count + 1,
       ...req.body,
     });
 
@@ -23,7 +27,7 @@ const createQuestion = async (req, res) => {
 
     res.status(201).json({ success: true, data: createdQuestion });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: "Error creating Question" });
   }
 };
@@ -70,8 +74,8 @@ const deleteQuestion = async (req, res) => {
 
 const getQuestions = async (req, res) => {
   try {
-   
-    
+
+
     const course = req.query.course;
     if (!course) {
       return res
@@ -88,7 +92,7 @@ const getQuestions = async (req, res) => {
 
 const getQuestionsWithDetails = async (req, res) => {
   try {
-    
+
     const course = req.query.course;
     const userId = req.user.userId;
 
@@ -394,7 +398,7 @@ const getRandomQuestionsFromModuleV2 = async (req, res) => {
     // Step 1: Find courses that belong to the module and include the given year
     const courseFilter = { module: new mongoose.Types.ObjectId(moduleId) };
     if (year) {
-      courseFilter.years = { $in: [year] }; // Ensure course has the specified year
+      courseFilter.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Ensure course has the specified year
     }
 
     const validCourses = await Course.find(courseFilter).select("_id");
@@ -431,7 +435,7 @@ const getRandomQuestionsFromCategory = async (req, res) => {
     // Step 2: Find courses inside those modules, optionally filtered by year
     const courseFilter = { module: { $in: validModuleIds } };
     if (year) {
-      courseFilter.years = { $in: [year] }; // course must include the year
+      courseFilter.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // course must include the year
     }
 
     const validCourses = await Course.find(courseFilter).select("_id");
@@ -456,6 +460,41 @@ const getRandomQuestionsFromCategory = async (req, res) => {
 };
 
 
+
+const reorderQuestions = async (req, res) => {
+  try {
+    const questionsOrder = req.body;
+
+    if (!Array.isArray(questionsOrder)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payload format",
+      });
+    }
+
+    const bulkOps = questionsOrder.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { $set: { index: item.index } },
+      },
+    }));
+
+    await Question.bulkWrite(bulkOps);
+
+    res.status(200).json({
+      success: true,
+      message: "Questions reordered successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: "Error reordering questions",
+    });
+  }
+};
+
+
 module.exports = {
   createQuestion,
   updateQuestion,
@@ -469,5 +508,6 @@ module.exports = {
   getRandomQuestionsFromModuleV2,
   getQuestionsPaginated,
   getSingleQuestionV2,
-  getRandomQuestionsFromCategory
+  getRandomQuestionsFromCategory,
+  reorderQuestions,
 };

@@ -13,6 +13,12 @@ const moduleSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
     },
+    yearIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Year",
+      }
+    ],
     years: {
       type: [
         {

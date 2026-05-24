@@ -10,6 +10,7 @@ router.get("/", userJwt, moduleController.getModules);
 router.get("/v2", userJwt, moduleController.getModulesV2);
 router.get("/name", userJwt, moduleController.getModulesByName);
 router.get("/page", userJwt, moduleController.getModulesPaginated);
+router.put("/reorder", moduleController.reorderModules);
 router.put("/:id", moduleController.updateModule);
 router.delete("/:id", moduleController.deleteModule);
 

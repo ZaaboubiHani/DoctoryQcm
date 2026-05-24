@@ -47,6 +47,7 @@ const registerUser = async (req, res) => {
     res.status(500).json({ success: false, error: error });
   }
 };
+
 const loginUser = async (req, res) => {
   try {
     const user = await User.findOne({
@@ -109,7 +110,7 @@ const updateUser = async (req, res) => {
       phoneNumber: req.body.phoneNumber,
       deviceToken: req.body.deviceToken,
       isValidated: req.body.isValidated,
-      year: req.body.year,
+      yearId: req.body.year,
     };
     if (req.body.password) {
       userData.passwordHash = await bcrypt.hash(req.body.password, 10);
@@ -285,6 +286,28 @@ const resetAllDeviceTokens = async (req, res) => {
 };
 
 
+const resetAllUsersValidation = async (req, res) => {
+  try {
+    const result = await User.updateMany(
+      {},
+      { $set: { isValidated: false } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Validation réinitialisée pour ${result.modifiedCount} utilisateurs.`,
+    });
+  } catch (error) {
+    console.error("Error resetting users validation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la réinitialisation des validations utilisateurs.",
+      error: error.message,
+    });
+  }
+};
+
+
 
 module.exports = {
   registerUser,
@@ -295,4 +318,5 @@ module.exports = {
   deleteUser,
   getSingleUser,
   resetAllDeviceTokens,
+  resetAllUsersValidation,
 };
