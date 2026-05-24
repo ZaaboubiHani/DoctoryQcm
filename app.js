@@ -24,6 +24,7 @@ app.use(morgan('tiny'))
 // // Define routes
 const userRoutes = require('./routes/userRoutes')
 const categoryRoutes = require('./routes/categoryRoutes')
+const yearRoutes = require('./routes/yearRoutes')
 const moduleRoutes = require('./routes/moduleRoutes')
 const courseRoutes = require('./routes/courseRoutes')
 const questionRoutes = require('./routes/questionRoutes')
@@ -44,6 +45,7 @@ const api = process.env.API_URL
 
 app.use('/users', userRoutes)
 app.use('/categories', categoryRoutes)
+app.use('/years', yearRoutes)
 app.use('/modules', moduleRoutes)
 app.use('/courses', courseRoutes)
 app.use('/questions', questionRoutes)

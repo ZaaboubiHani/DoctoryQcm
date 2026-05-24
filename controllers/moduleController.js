@@ -77,7 +77,7 @@ const getModulesV2 = async (req, res) => {
     let query = {};
 
     if (year) {
-      query.years = { $in: [year] }; // Check if year exists in the years array
+      query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if year exists in the years array
     }
 
     if (categoryId) {
@@ -108,23 +108,27 @@ const getModulesByName = async (req, res) => {
     res.status(500).json({ error: "Error fetching Modules" });
   }
 };
-
 const getModulesPaginated = async (req, res) => {
   try {
     const { category, years } = req.query;
 
     let matchStage = {};
 
+    // Filter by category
     if (category) {
       matchStage.category = new mongoose.Types.ObjectId(category);
     }
 
+    // Filter by yearIds
     if (years) {
-      // Convert comma-separated string into an array
-      const yearsArray = years.split(",");
-      matchStage.years = { $in: yearsArray };
+      const yearsArray = years
+        .split(",")
+        .map((id) => new mongoose.Types.ObjectId(id.trim()));
+
+      matchStage.yearIds = { $in: yearsArray };
     }
 
+    // Fetch modules
     const modules = await Module.aggregate([
       { $match: matchStage },
       { $sort: { index: 1 } },
@@ -141,6 +145,41 @@ const getModulesPaginated = async (req, res) => {
   }
 };
 
+const reorderModules = async (req, res) => {
+  try {
+    const modulesOrder = req.body;
+
+    if (!Array.isArray(modulesOrder)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payload format",
+      });
+    }
+
+    const bulkOps = modulesOrder.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { $set: { index: item.index } },
+      },
+    }));
+
+    await Module.bulkWrite(bulkOps);
+
+    res.status(200).json({
+      success: true,
+      message: "Modules reordered successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: "Error reordering modules",
+    });
+  }
+};
+
+
+
 module.exports = {
   createModule,
   updateModule,
@@ -149,4 +188,5 @@ module.exports = {
   getModulesV2,
   getModulesPaginated,
   getModulesByName,
+  reorderModules,
 };

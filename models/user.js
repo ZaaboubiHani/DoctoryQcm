@@ -34,9 +34,15 @@ const userSchema = new mongoose.Schema(
     },
     year: {
       type: String,
-      enum: ["Residency", "Fourth", "Fifth", "Sixth","Constantine"],
+      enum: ["Residency", "Fourth", "Fifth", "Sixth", "Constantine"],
       default: "Residency",
     },
+    yearId:
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Year",
+    }
+
   },
   { timestamps: true, versionKey: false }
 );

@@ -35,6 +35,7 @@ router.get(
 router.get("/page", userJwt, questionController.getQuestionsPaginated);
 router.get("/:id", userJwt, questionController.getSingleQuestion);
 router.get("/v2/:id", adminJwt, questionController.getSingleQuestionV2);
+router.put("/reorder", questionController.reorderQuestions);
 router.put("/:id", adminJwt, questionController.updateQuestion);
 router.delete("/:id", adminJwt, questionController.deleteQuestion);
 

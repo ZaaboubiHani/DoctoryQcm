@@ -18,11 +18,17 @@ const courseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "File",
     },
+    yearIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Year",
+      }
+    ],
     years: {
       type: [
         {
           type: String,
-          enum: ["Residency", "Fourth", "Fifth", "Sixth","Constantine"],
+          enum: ["Residency", "Fourth", "Fifth", "Sixth", "Constantine"],
           default: ["Residency"],
         },
       ],
