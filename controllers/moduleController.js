@@ -77,7 +77,8 @@ const getModulesV2 = async (req, res) => {
     let query = {};
 
     if (year) {
-      query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if year exists in the years array
+      // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if year exists in the years array
+      query.years = { $in: [year] }; // Check if year exists in the years array
     }
 
     if (categoryId) {
