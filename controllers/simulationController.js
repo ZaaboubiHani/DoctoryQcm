@@ -43,15 +43,13 @@ const generateSimulationV2 = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    // const userYear = user.yearId;
     const userYear = user.year;
 
     let questionIds = [];
 
-    // if (userYear === "Residency") {
+    if (userYear === "Residency") {
       // Get valid courses for Residency
       const validCourses = await Course.find(
-        // { yearIds: { $in: [userYear] } },
         { years: { $in: [userYear] } },
         "_id"
       );
@@ -60,7 +58,7 @@ const generateSimulationV2 = async (req, res) => {
       // Get all categories
       const categories = await Category.find({}, "_id");
 
-      // Get 50 random questions per category
+      // Get 50 random questions per category (preserving category order)
       for (const category of categories) {
         const randomQuestions = await Question.aggregate([
           {
@@ -75,32 +73,31 @@ const generateSimulationV2 = async (req, res) => {
 
         questionIds.push(...randomQuestions.map((q) => q._id));
       }
-    // } else {
-    //   // Regular years
-    //   const courses = await Course.find(
-    //     // { yearIds: userYear },
-    //     { years: userYear },
-    //     "_id"
-    //   );
-    //   const courseIds = courses.map((c) => c._id);
+    } else {
+      // Regular years
+      const courses = await Course.find(
+        { years: userYear },
+        "_id"
+      );
+      const courseIds = courses.map((c) => c._id);
 
-    //   if (courseIds.length === 0) {
-    //     return res
-    //       .status(404)
-    //       .json({ error: "No courses found for this year." });
-    //   }
+      if (courseIds.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "No courses found for this year." });
+      }
 
-    //   const randomQuestions = await Question.aggregate([
-    //     { $match: { course: { $in: courseIds } } },
-    //     { $sample: { size: 150 } },
-    //     { $project: { _id: 1 } },
-    //   ]);
+      const randomQuestions = await Question.aggregate([
+        { $match: { course: { $in: courseIds } } },
+        { $sample: { size: 150 } },
+        { $project: { _id: 1 } },
+      ]);
 
-    //   questionIds = randomQuestions.map((q) => q._id);
-    // }
+      questionIds = randomQuestions.map((q) => q._id);
+    }
 
     // Fetch full question data + populate category
-    const questions = await Question.find({ _id: { $in: questionIds } })
+    let questions = await Question.find({ _id: { $in: questionIds } })
       .select("text category choices correctAnswers")
       .populate({
         path: "category",
@@ -108,22 +105,25 @@ const generateSimulationV2 = async (req, res) => {
         select: "name",
       });
 
-    // Format response (same shape as before)
+    // Re-order questions to match the original questionIds order
+    const questionMap = new Map(questions.map(q => [q._id.toString(), q]));
+    questions = questionIds.map(id => questionMap.get(id.toString())).filter(Boolean);
+
+    // Format response
     const formattedQuestions = questions.map((q) => ({
       _id: q._id,
       text: q.text,
       choices: q.choices,
       correctAnswers: q.correctAnswers,
       category: q.category?.name || null,
-      answers: [], // frontend-compatible
+      answers: [],
     }));
 
     const simulation = new Simulation({
       user: userId,
       questions: questions.map((q) => ({
         question: q._id,
-
-        answers: [], // frontend-compatible
+        answers: [],
       })),
     });
 
