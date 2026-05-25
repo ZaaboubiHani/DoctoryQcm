@@ -43,14 +43,16 @@ const generateSimulationV2 = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    const userYear = user.yearId;
+    // const userYear = user.yearId;
+    const userYear = user.year;
 
     let questionIds = [];
 
     if (userYear === "Residency") {
       // Get valid courses for Residency
       const validCourses = await Course.find(
-        { yearIds: { $in: [userYear] } },
+        // { yearIds: { $in: [userYear] } },
+        { years: { $in: [userYear] } },
         "_id"
       );
       const validCourseIds = validCourses.map((c) => c._id);
@@ -76,7 +78,8 @@ const generateSimulationV2 = async (req, res) => {
     } else {
       // Regular years
       const courses = await Course.find(
-        { yearIds: userYear },
+        // { yearIds: userYear },
+        { years: userYear },
         "_id"
       );
       const courseIds = courses.map((c) => c._id);
