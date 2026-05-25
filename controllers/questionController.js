@@ -398,7 +398,8 @@ const getRandomQuestionsFromModuleV2 = async (req, res) => {
     // Step 1: Find courses that belong to the module and include the given year
     const courseFilter = { module: new mongoose.Types.ObjectId(moduleId) };
     if (year) {
-      courseFilter.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Ensure course has the specified year
+      // courseFilter.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Ensure course has the specified year
+      courseFilter.years = { $in: [year] }; // Ensure course has the specified year
     }
 
     const validCourses = await Course.find(courseFilter).select("_id");
