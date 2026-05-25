@@ -120,7 +120,11 @@ const generateSimulationV2 = async (req, res) => {
 
     const simulation = new Simulation({
       user: userId,
-      questions: formattedQuestions,
+      questions: questions.map((q) => ({
+        question: q._id,
+
+        answers: [], // frontend-compatible
+      })),
     });
 
     await simulation.save();
@@ -128,8 +132,8 @@ const generateSimulationV2 = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        _id:simulation._id,
-        user:userId,
+        _id: simulation._id,
+        user: userId,
         questions: formattedQuestions,
       },
     });
