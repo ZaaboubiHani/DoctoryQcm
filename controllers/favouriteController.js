@@ -245,7 +245,8 @@ const getFavouriteModulesV2 = async (req, res) => {
     const categoryId = req.query.category
       ? new mongoose.Types.ObjectId(req.query.category)
       : null;
-    const year = new mongoose.Types.ObjectId(req.query.year); // Year is a string, and "years" is an array
+    // const year = new mongoose.Types.ObjectId(req.query.year); // Year is a string, and "years" is an array
+    const year = req.query.year; // Year is a string, and "years" is an array
 
     const matchStage = {
       user: userId,
@@ -289,7 +290,8 @@ const getFavouriteModulesV2 = async (req, res) => {
     if (year) {
       pipeline.push({
         $match: {
-          "module.yearIds": { $in: [year] },
+          // "module.yearIds": { $in: [year] },
+          "module.years": { $in: [year] },
         },
       });
     }
@@ -367,7 +369,8 @@ const getFavouriteCoursesV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
     const moduleId = new mongoose.Types.ObjectId(req.query.module);
-    const year =new mongoose.Types.ObjectId(req.query.year); // Year is a string, and "years" is an array
+    // const year =new mongoose.Types.ObjectId(req.query.year); // Year is a string, and "years" is an array
+    const year = req.query.year; // Year is a string, and "years" is an array
     const baseUrl = process.env.BASE_URL;
     const pipeline = [
       {
@@ -418,7 +421,8 @@ const getFavouriteCoursesV2 = async (req, res) => {
     // Apply year filter if provided
     if (year) {
       pipeline.push({
-        $match: { "course.yearIds": { $in: [year] } },
+        // $match: { "course.yearIds": { $in: [year] } },
+        $match: { "course.years": { $in: [year] } },
       });
     }
 
