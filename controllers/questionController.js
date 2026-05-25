@@ -436,7 +436,7 @@ const getRandomQuestionsFromCategory = async (req, res) => {
     const courseFilter = { module: { $in: validModuleIds } };
     if (year) {
       // courseFilter.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // course must include the year
-      courseFilter.years = { $in: [] }; // course must include the year
+      courseFilter.years = { $in: [year] }; // course must include the year
     }
 
     const validCourses = await Course.find(courseFilter).select("_id");
