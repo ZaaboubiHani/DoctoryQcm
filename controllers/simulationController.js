@@ -48,7 +48,7 @@ const generateSimulationV2 = async (req, res) => {
 
     let questionIds = [];
 
-    if (userYear === "Residency") {
+    // if (userYear === "Residency") {
       // Get valid courses for Residency
       const validCourses = await Course.find(
         // { yearIds: { $in: [userYear] } },
@@ -75,29 +75,29 @@ const generateSimulationV2 = async (req, res) => {
 
         questionIds.push(...randomQuestions.map((q) => q._id));
       }
-    } else {
-      // Regular years
-      const courses = await Course.find(
-        // { yearIds: userYear },
-        { years: userYear },
-        "_id"
-      );
-      const courseIds = courses.map((c) => c._id);
+    // } else {
+    //   // Regular years
+    //   const courses = await Course.find(
+    //     // { yearIds: userYear },
+    //     { years: userYear },
+    //     "_id"
+    //   );
+    //   const courseIds = courses.map((c) => c._id);
 
-      if (courseIds.length === 0) {
-        return res
-          .status(404)
-          .json({ error: "No courses found for this year." });
-      }
+    //   if (courseIds.length === 0) {
+    //     return res
+    //       .status(404)
+    //       .json({ error: "No courses found for this year." });
+    //   }
 
-      const randomQuestions = await Question.aggregate([
-        { $match: { course: { $in: courseIds } } },
-        { $sample: { size: 150 } },
-        { $project: { _id: 1 } },
-      ]);
+    //   const randomQuestions = await Question.aggregate([
+    //     { $match: { course: { $in: courseIds } } },
+    //     { $sample: { size: 150 } },
+    //     { $project: { _id: 1 } },
+    //   ]);
 
-      questionIds = randomQuestions.map((q) => q._id);
-    }
+    //   questionIds = randomQuestions.map((q) => q._id);
+    // }
 
     // Fetch full question data + populate category
     const questions = await Question.find({ _id: { $in: questionIds } })
