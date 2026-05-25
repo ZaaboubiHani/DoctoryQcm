@@ -118,9 +118,18 @@ const generateSimulationV2 = async (req, res) => {
       answers: [], // frontend-compatible
     }));
 
+    const simulation = new Simulation({
+      user: userId,
+      questions: formattedQuestions,
+    });
+
+    await simulation.save();
+
     res.status(200).json({
       success: true,
       data: {
+        _id:simulation._id,
+        user:userId,
         questions: formattedQuestions,
       },
     });
