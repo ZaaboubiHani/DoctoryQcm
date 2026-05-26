@@ -43,7 +43,31 @@ const updateCourse = async (req, res) => {
   const courseId = req.params.id;
 
   try {
-    const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, {
+      const years = req.body.years.map((year) => {
+      if (year == '692ac3009b0bb7926894ee02') {
+        return "Residency";
+      }
+      if (year == '692ac43c9b0bb7926894ee1c') {
+        return "Fourth";
+      }
+      if (year == '692ac4469b0bb7926894ee1e' ) {
+        return "Fifth";
+      }
+      if (year == '692ac4509b0bb7926894ee20' ) {
+        return "Sixth";
+      }
+      if (year == '692ad748b495dbbf7d594457' ) {
+        return "Constantine";
+      }
+      return year;
+    });
+
+    const yearIds = req.body.years;
+    const updatedCourse = await Course.findByIdAndUpdate(courseId, {
+      ...req.body,
+      years,
+      yearIds,
+    }, {
       new: true,
     }).populate("file"); // ✅ Populate the file field if it exists
 
