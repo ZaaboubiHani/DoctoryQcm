@@ -25,7 +25,32 @@ const createModule = async (req, res) => {
 const updateModule = async (req, res) => {
   const moduleId = req.params.id;
   try {
-    const updatedModule = await Module.findByIdAndUpdate(moduleId, req.body, {
+    const years = req.body.years.map((year) => {
+      if (year == '692ac3009b0bb7926894ee02') {
+        return "Residency";
+      }
+      if (year == '692ac43c9b0bb7926894ee1c') {
+        return "Fourth";
+      }
+      if (year == '692ac4469b0bb7926894ee1e' ) {
+        return "Fifth";
+      }
+      if (year == '692ac4509b0bb7926894ee20' ) {
+        return "Sixth";
+      }
+      if (year == '692ad748b495dbbf7d594457' ) {
+        return "Constantine";
+      }
+      return year;
+    });
+
+    const yearIds = req.body.years;
+
+    const updatedModule = await Module.findByIdAndUpdate(moduleId, {
+      ...req.body,
+      years,
+      yearIds,
+    }, {
       new: true,
     });
 

@@ -11,7 +11,7 @@ async function fixGlobalIndexes() {
     console.log("✅ Connected to MongoDB");
 
     // 2️⃣ Fetch all questions (sorted for stable order)
-    const questions = await Question.find().sort({ createdAt: 1 });
+    const questions = await Question.find().sort({ createdAt: -1 });
 
     console.log(`📚 Found ${questions.length} questions`);
 
