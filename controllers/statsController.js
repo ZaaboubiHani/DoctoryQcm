@@ -14,14 +14,18 @@ const getStats = async (req, res) => {
 
     // Count modules for the specific user's year
     const user = await User.findById(userId);
-    const userYear = user.yearId; // Assuming 'year' is the enum property in User model
-    const modules = await Module.countDocuments({ yearIds: { $in: [userYear] } });
+    // const userYear = user.yearId; // Assuming 'year' is the enum property in User model
+    const userYear = user.year; // Assuming 'year' is the enum property in User model
+    // const modules = await Module.countDocuments({ yearIds: { $in: [userYear] } });
+    const modules = await Module.countDocuments({ years: { $in: [userYear] } });
 
     // Count courses for the specific user's year
-    const courses = await Course.countDocuments({ yearIds: { $in: [userYear] } });
+    // const courses = await Course.countDocuments({ yearIds: { $in: [userYear] } });
+    const courses = await Course.countDocuments({ years: { $in: [userYear] } });
 
     // Get course IDs that match the user's year
-    const courseIds = await Course.find({ yearIds: { $in: [userYear] } }).distinct("_id");
+    // const courseIds = await Course.find({ yearIds: { $in: [userYear] } }).distinct("_id");
+    const courseIds = await Course.find({ years: { $in: [userYear] } }).distinct("_id");
 
     // Count questions that belong to those courses
     const questions = await Question.countDocuments({
@@ -293,9 +297,11 @@ const getCategoriesStatsV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
     const user = await User.findById(userId);
-    const userYear = user.yearId;
+    // const userYear = user.yearId;
+    const userYear = user.year;
 
-    const validCourses = await Course.find({ yearIds: { $in: [userYear] } }).select("_id");
+    // const validCourses = await Course.find({ yearIds: { $in: [userYear] } }).select("_id");
+    const validCourses = await Course.find({ years: { $in: [userYear] } }).select("_id");
     const validCourseIds = validCourses.map((c) => c._id);
 
     const answersPerCategory = await Category.aggregate([
@@ -481,9 +487,11 @@ const getModulesStatsV2 = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
     const user = await User.findById(userId);
-    const userYear = user.yearId;
+    // const userYear = user.yearId;
+    const userYear = user.year;
 
-    const validCourses = await Course.find({ yearIds: { $in: [userYear] } }).select("_id");
+    // const validCourses = await Course.find({ yearIds: { $in: [userYear] } }).select("_id");
+    const validCourses = await Course.find({ years: { $in: [userYear] } }).select("_id");
     const validCourseIds = validCourses.map((c) => c._id);
     let matchStage = {};
     let query = {};
@@ -494,7 +502,8 @@ const getModulesStatsV2 = async (req, res) => {
 
     const year = req.query.year;
     if (year) {
-      query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if the year exists in the years array
+      // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if the year exists in the years array
+      query.years = { $in: [year] }; // Check if the year exists in the years array
     }
 
     const answersPerModule = await Module.aggregate([
@@ -693,7 +702,8 @@ const getCoursesStatsV2 = async (req, res) => {
 
     const year = req.query.year;
     if (year) {
-      query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if the year exists in the years array
+      // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if the year exists in the years array
+      query.years = { $in: [year] }; // Check if the year exists in the years array
     }
 
     const answersPerCourse = await Course.aggregate([
