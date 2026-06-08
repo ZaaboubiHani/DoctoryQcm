@@ -1,4 +1,5 @@
 const Residency = require("../models/residency");
+const Module = require("../models/module");
 const ResidencyQuestion = require('../models/residencyQuestion');
 
 const createResidency = async (req, res) => {
@@ -8,6 +9,8 @@ const createResidency = async (req, res) => {
     const newResidency = new Residency({
       name: req.body.name,
       date: req.body.date,
+      type: req.body.type || "exam",
+      module: req.body.module || null,
       index: count + 1,
     });
 
@@ -52,7 +55,17 @@ const getResidencies = async (req, res) => {
 
 const getResidenciesV2 = async (req, res) => {
   try {
-    const residencies = await Residency.find().select("-createdAt -updatedAt").sort({ index: 1 });
+    const category = req.query.category;
+    let query = {};
+
+    if (category) {
+      const modules = await Module.find({ category }).select("_id");
+      query.module = { $in: modules.map(m => m._id) };
+    }
+    else {
+      query.type = "exam";
+    }
+    const residencies = await Residency.find(query).select("-createdAt -updatedAt").sort({ index: 1 });
     res.status(200).json({ success: true, data: residencies });
   } catch (error) {
     res.status(500).json({ error: "Error fetching Residencies" });
@@ -68,6 +81,8 @@ const updateResidency = async (req, res) => {
       {
         name: req.body.name,
         date: req.body.date,
+        type: req.body.type || "exam",
+        module: req.body.module || null,
       },
       {
         new: true,          // return updated document
