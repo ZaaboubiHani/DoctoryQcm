@@ -13,6 +13,15 @@ const residencySchema = new mongoose.Schema(
     index: {
       type: Number,
     },
+    type: {
+      type: String,
+      enum: ["exam", "module"],
+      default: "exam",
+    },
+    module: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Module",
+    },
   },
   { versionKey: false, timestamps: true }
 );

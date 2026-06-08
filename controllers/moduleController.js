@@ -101,10 +101,33 @@ const getModulesV2 = async (req, res) => {
     const year = req.query.year;
     let query = {};
 
-    if (year) {
-      // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if year exists in the years array
-      query.years = { $in: [year] }; // Check if year exists in the years array
+    switch (year) {
+      case '692ac3009b0bb7926894ee02':
+        query.years = { $in: ["Residency"] };
+        break;
+      case '692ac43c9b0bb7926894ee1c':
+        query.years = { $in: ["Fourth"] };
+        break;
+      case '692ac4469b0bb7926894ee1e':
+        query.years = { $in: ["Fifth"] };
+        break;
+      case '692ac4509b0bb7926894ee20':
+        query.years = { $in: ["Sixth"] };
+        break;
+      case '692ad748b495dbbf7d594457':
+        query.years = { $in: ["Constantine"] };
+        break;
+
+        default:
+        break;
     }
+
+    
+
+    // if (year) {
+    //   // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if year exists in the years array
+    //   query.years = { $in: [year] }; // Check if year exists in the years array
+    // }
 
     if (categoryId) {
       query.category = categoryId;
