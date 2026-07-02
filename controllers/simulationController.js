@@ -4,6 +4,7 @@ const Question = require("../models/question");
 const Simulation = require("../models/simulation");
 const User = require("../models/user");
 const Course = require("../models/course");
+const Module = require("../models/module");
 
 const generateSimulation = async (req, res) => {
   try {
@@ -47,54 +48,63 @@ const generateSimulationV2 = async (req, res) => {
 
     let questionIds = [];
 
-    if (userYear === "Residency") {
-      // Get valid courses for Residency
-      const validCourses = await Course.find(
-        { years: { $in: [userYear] } },
-        "_id"
-      );
-      const validCourseIds = validCourses.map((c) => c._id);
+    // Get valid modules for Residency
+    const validModules = await Module.find(
+      { years: { $in: [userYear] } },
+      "_id"
+    );
+    const validCourses = await Course.find(
+      { years: { $in: [userYear] } },
+      "_id"
+    );
 
-      // Get all categories
-      const categories = await Category.find({}, "_id");
+    const moduleIds = validModules.map((m) => m._id);
+    const courseIds = validCourses.map((c) => c._id);
 
-      // Get 50 random questions per category (preserving category order)
-      for (const category of categories) {
-        const randomQuestions = await Question.aggregate([
-          {
-            $match: {
-              category: new mongoose.Types.ObjectId(category._id),
-              course: { $in: validCourseIds },
-            },
-          },
-          { $sample: { size: 50 } },
-          { $project: { _id: 1 } },
-        ]);
+    const questionsPerModule = Math.floor(150 / moduleIds.length);
+    const remainder = 150 % moduleIds.length;
 
-        questionIds.push(...randomQuestions.map((q) => q._id));
-      }
-    } else {
-      // Regular years
-      const courses = await Course.find(
-        { years: userYear },
-        "_id"
-      );
-      const courseIds = courses.map((c) => c._id);
+    // Get questions from each module
+    const randomQuestions = await Question.aggregate([
+      { $match: { module: { $in: moduleIds }, course: { $in: courseIds } } },
+      // Group by module
+      {
+        $group: {
+          _id: "$module",
+          questions: { $push: "$$ROOT" }
+        }
+      },
+      // Get random sample from each module
+      {
+        $project: {
+          module: "$_id",
+          questions: { $slice: ["$questions", questionsPerModule] }
+        }
+      },
+      // Unwind back to individual documents
+      { $unwind: "$questions" },
+      { $replaceRoot: { newRoot: "$questions" } },
+      // Final random shuffle
+      { $sample: { size: 150 } }
+    ]);
 
-      if (courseIds.length === 0) {
-        return res
-          .status(404)
-          .json({ error: "No courses found for this year." });
-      }
-
-      const randomQuestions = await Question.aggregate([
-        { $match: { course: { $in: courseIds } } },
-        { $sample: { size: 150 } },
-        { $project: { _id: 1 } },
+    // Handle remainder (distribute extra questions to some modules)
+    if (remainder > 0) {
+      // Get additional random questions to fill up to 150
+      const extraQuestions = await Question.aggregate([
+        {
+          $match: {
+            module: { $in: moduleIds },
+            _id: { $nin: randomQuestions.map(q => q._id) }
+          }
+        },
+        { $sample: { size: remainder } }
       ]);
 
-      questionIds = randomQuestions.map((q) => q._id);
+      randomQuestions.push(...extraQuestions);
     }
+
+    questionIds = randomQuestions.map((q) => q._id);
 
     // Fetch full question data + populate category
     let questions = await Question.find({ _id: { $in: questionIds } })

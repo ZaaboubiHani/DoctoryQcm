@@ -443,12 +443,52 @@ const getRandomQuestionsFromCategory = async (req, res) => {
     const validCourses = await Course.find(courseFilter).select("_id");
     const validCourseIds = validCourses.map((c) => c._id);
 
-    // Step 3: Fetch random questions from those courses
+    const questionsPerModule = Math.floor(50 / validModuleIds.length);
+    const remainder = 50 % validModuleIds.length;
+
+    const randomQuestions = await Question.aggregate([
+      { $match: { module: { $in: validModuleIds }, course: { $in: validCourseIds } } },
+      // Group by module
+      {
+        $group: {
+          _id: "$module",
+          questions: { $push: "$$ROOT" }
+        }
+      },
+      // Get random sample from each module
+      {
+        $project: {
+          module: "$_id",
+          questions: { $slice: ["$questions", questionsPerModule] }
+        }
+      },
+      // Unwind back to individual documents
+      { $unwind: "$questions" },
+      { $replaceRoot: { newRoot: "$questions" } },
+      // Final random shuffle
+      { $sample: { size: 150 } }
+    ]);
+
+    if (remainder > 0) {
+      // Get additional random questions to fill up to 150
+      const extraQuestions = await Question.aggregate([
+        {
+          $match: {
+            module: { $in: validModuleIds },
+            _id: { $nin: randomQuestions.map(q => q._id) }
+          }
+        },
+        { $sample: { size: remainder } }
+      ]);
+
+      randomQuestions.push(...extraQuestions);
+    }
+
+
     const questions = await Question.aggregate([
       {
         $match: {
-          module: { $in: validModuleIds },
-          course: { $in: validCourseIds },
+          _id: { $nin: randomQuestions.map(q => q._id) }
         },
       },
       { $sample: { size: 50 } }, // adjust size if needed
