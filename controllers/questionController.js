@@ -466,11 +466,11 @@ const getRandomQuestionsFromCategory = async (req, res) => {
       { $unwind: "$questions" },
       { $replaceRoot: { newRoot: "$questions" } },
       // Final random shuffle
-      { $sample: { size: 150 } }
+      { $sample: { size: 50 } }
     ]);
 
     if (remainder > 0) {
-      // Get additional random questions to fill up to 150
+      // Get additional random questions to fill up to 50
       const extraQuestions = await Question.aggregate([
         {
           $match: {
