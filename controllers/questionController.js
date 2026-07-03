@@ -475,6 +475,7 @@ const getRandomQuestionsFromCategory = async (req, res) => {
         {
           $match: {
             module: { $in: validModuleIds },
+            course: { $in: validCourseIds },
             _id: { $nin: randomQuestions.map(q => q._id) }
           }
         },
@@ -488,7 +489,7 @@ const getRandomQuestionsFromCategory = async (req, res) => {
     const questions = await Question.aggregate([
       {
         $match: {
-          _id: { $nin: randomQuestions.map(q => q._id) }
+          _id: { $in: randomQuestions.map(q => q._id) }
         },
       },
       { $sample: { size: 50 } }, // adjust size if needed
