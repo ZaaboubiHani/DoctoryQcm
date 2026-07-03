@@ -104,13 +104,59 @@ const updateUser = async (req, res) => {
       });
     }
 
+    let year = req.body.year;
+    let yearId = req.body.yearId;
+
+    switch (req.body.year) {
+      case '692ac3009b0bb7926894ee02':
+        year = "Residency";
+        break;
+      case '692ac43c9b0bb7926894ee1c':
+        year = "Fourth";
+        break;
+      case '692ac4469b0bb7926894ee1e':
+        year = "Fifth";
+        break;
+      case '692ac4509b0bb7926894ee20':
+        year = "Sixth";
+        break;
+      case '692ad748b495dbbf7d594457':
+        year = "Constantine";
+        break;
+
+        default:
+        break;
+    }
+
+    switch (req.body.yearId) {
+      case 'Residency':
+        yearId = "692ac3009b0bb7926894ee02";
+        break;
+      case 'Fourth':
+        yearId = "692ac43c9b0bb7926894ee1c";
+        break;
+      case 'Fifth':
+        yearId = "692ac4469b0bb7926894ee1e";
+        break;
+      case 'Sixth':
+        yearId = "692ac4509b0bb7926894ee20";
+        break;
+      case 'Constantine':
+        yearId = "692ad748b495dbbf7d594457";
+        break;
+
+        default:
+        break;
+    }
+
     let userData = {
       email: req.body.email,
       name: req.body.name,
       phoneNumber: req.body.phoneNumber,
       deviceToken: req.body.deviceToken,
       isValidated: req.body.isValidated,
-      yearId: req.body.year,
+      yearId: yearId,
+      year: year,
     };
     if (req.body.password) {
       userData.passwordHash = await bcrypt.hash(req.body.password, 10);
