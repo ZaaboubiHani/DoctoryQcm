@@ -163,7 +163,8 @@ const getCoursesV2 = async (req, res) => {
         query.years = { $in: ["Constantine"] };
         break;
 
-        default:
+      default:
+        query.years = { $in: [year] };
         break;
     }
 
