@@ -43,20 +43,20 @@ const updateCourse = async (req, res) => {
   const courseId = req.params.id;
 
   try {
-      const years = req.body.years.map((year) => {
+    const years = req.body.years.map((year) => {
       if (year == '692ac3009b0bb7926894ee02') {
         return "Residency";
       }
       if (year == '692ac43c9b0bb7926894ee1c') {
         return "Fourth";
       }
-      if (year == '692ac4469b0bb7926894ee1e' ) {
+      if (year == '692ac4469b0bb7926894ee1e') {
         return "Fifth";
       }
-      if (year == '692ac4509b0bb7926894ee20' ) {
+      if (year == '692ac4509b0bb7926894ee20') {
         return "Sixth";
       }
-      if (year == '692ad748b495dbbf7d594457' ) {
+      if (year == '692ad748b495dbbf7d594457') {
         return "Constantine";
       }
       return year;
@@ -145,27 +145,28 @@ const getCoursesV2 = async (req, res) => {
     const moduleId = req.query.module;
     const year = req.query.year;
     let query = {};
+    if (year) {
+      switch (year) {
+        case '692ac3009b0bb7926894ee02':
+          query.years = { $in: ["Residency"] };
+          break;
+        case '692ac43c9b0bb7926894ee1c':
+          query.years = { $in: ["Fourth"] };
+          break;
+        case '692ac4469b0bb7926894ee1e':
+          query.years = { $in: ["Fifth"] };
+          break;
+        case '692ac4509b0bb7926894ee20':
+          query.years = { $in: ["Sixth"] };
+          break;
+        case '692ad748b495dbbf7d594457':
+          query.years = { $in: ["Constantine"] };
+          break;
 
-    switch (year) {
-      case '692ac3009b0bb7926894ee02':
-        query.years = { $in: ["Residency"] };
-        break;
-      case '692ac43c9b0bb7926894ee1c':
-        query.years = { $in: ["Fourth"] };
-        break;
-      case '692ac4469b0bb7926894ee1e':
-        query.years = { $in: ["Fifth"] };
-        break;
-      case '692ac4509b0bb7926894ee20':
-        query.years = { $in: ["Sixth"] };
-        break;
-      case '692ad748b495dbbf7d594457':
-        query.years = { $in: ["Constantine"] };
-        break;
-
-      default:
-        query.years = { $in: [year] };
-        break;
+        default:
+          query.years = { $in: [year] };
+          break;
+      }
     }
 
     // if (year) {
