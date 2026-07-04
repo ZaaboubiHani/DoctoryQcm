@@ -429,70 +429,75 @@ const getRandomQuestionsFromCategory = async (req, res) => {
     }
 
     // Step 1: Find modules that belong to the category
-    const moduleFilter = { category: new mongoose.Types.ObjectId(categoryId) };
-    const validModules = await Module.find(moduleFilter).select("_id");
+    const validModules = await Module.find({ 
+      category: new mongoose.Types.ObjectId(categoryId) 
+    }).select("_id");
     const validModuleIds = validModules.map((m) => m._id);
+
+    if (validModuleIds.length === 0) {
+      return res.status(200).json({ success: true, data: { questions: [] } });
+    }
 
     // Step 2: Find courses inside those modules, optionally filtered by year
     const courseFilter = { module: { $in: validModuleIds } };
     if (year) {
-      // courseFilter.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // course must include the year
-      courseFilter.years = { $in: [year] }; // course must include the year
+      courseFilter.years = { $in: [year] };
     }
 
     const validCourses = await Course.find(courseFilter).select("_id");
     const validCourseIds = validCourses.map((c) => c._id);
 
+    if (validCourseIds.length === 0) {
+      return res.status(200).json({ success: true, data: { questions: [] } });
+    }
+
     const questionsPerModule = Math.floor(50 / validModuleIds.length);
-    const remainder = 50 % validModuleIds.length;
+    let remainder = 50 % validModuleIds.length;
 
-    const randomQuestions = await Question.aggregate([
-      { $match: { module: { $in: validModuleIds }, course: { $in: validCourseIds } } },
-      // Group by module
-      {
-        $group: {
-          _id: "$module",
-          questions: { $push: "$$ROOT" }
+    // Get random questions from each module
+    const questionsByModule = await Promise.all(
+      validModuleIds.map(async (moduleId) => {
+        // Calculate how many questions to get from this module
+        let limit = questionsPerModule;
+        if (remainder > 0) {
+          limit++;
+          remainder--;
         }
-      },
-      // Get random sample from each module
-      {
-        $project: {
-          module: "$_id",
-          questions: { $slice: ["$questions", questionsPerModule] }
-        }
-      },
-      // Unwind back to individual documents
-      { $unwind: "$questions" },
-      { $replaceRoot: { newRoot: "$questions" } },
-      // Final random shuffle
-      { $sample: { size: 50 } }
-    ]);
 
-    if (remainder > 0) {
-      // Get additional random questions to fill up to 50
-      const extraQuestions = await Question.aggregate([
+        return Question.aggregate([
+          {
+            $match: {
+              module: moduleId,
+              course: { $in: validCourseIds }
+            }
+          },
+          { $sample: { size: limit } }
+        ]);
+      })
+    );
+
+    // Flatten the array of arrays
+    let questions = questionsByModule.flat();
+
+    // If we don't have 50 questions total, fill the remainder with random questions
+    if (questions.length < 50) {
+      const existingIds = questions.map(q => q._id);
+      const additionalQuestions = await Question.aggregate([
         {
           $match: {
             module: { $in: validModuleIds },
-            _id: { $nin: randomQuestions.map(q => q._id) }
+            course: { $in: validCourseIds },
+            _id: { $nin: existingIds }
           }
         },
-        { $sample: { size: remainder } }
+        { $sample: { size: 50 - questions.length } }
       ]);
-
-      randomQuestions.push(...extraQuestions);
+      
+      questions = [...questions, ...additionalQuestions];
     }
 
-
-    const questions = await Question.aggregate([
-      {
-        $match: {
-          _id: { $nin: randomQuestions.map(q => q._id) }
-        },
-      },
-      { $sample: { size: 50 } }, // adjust size if needed
-    ]);
+    // Final shuffle
+    questions = questions.sort(() => Math.random() - 0.5);
 
     res.status(200).json({ success: true, data: { questions } });
   } catch (error) {
@@ -500,7 +505,6 @@ const getRandomQuestionsFromCategory = async (req, res) => {
     res.status(500).json({ error: "Error fetching Questions" });
   }
 };
-
 
 
 const reorderQuestions = async (req, res) => {
