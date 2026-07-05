@@ -396,7 +396,10 @@ const getRandomQuestionsFromModuleV2 = async (req, res) => {
     }
 
     // Step 1: Find courses that belong to the module and include the given year
-    const courseFilter = { module: new mongoose.Types.ObjectId(moduleId) };
+    const courseFilter = {
+      module: new mongoose.Types.ObjectId(moduleId),
+      excludeFromRandom: { $ne: true }
+    };
     if (year) {
       // courseFilter.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Ensure course has the specified year
       courseFilter.years = { $in: [year] }; // Ensure course has the specified year
@@ -429,8 +432,8 @@ const getRandomQuestionsFromCategory = async (req, res) => {
     }
 
     // Step 1: Find modules that belong to the category
-    const validModules = await Module.find({ 
-      category: new mongoose.Types.ObjectId(categoryId) 
+    const validModules = await Module.find({
+      category: new mongoose.Types.ObjectId(categoryId)
     }).select("_id");
     const validModuleIds = validModules.map((m) => m._id);
 
@@ -492,12 +495,9 @@ const getRandomQuestionsFromCategory = async (req, res) => {
         },
         { $sample: { size: 50 - questions.length } }
       ]);
-      
+
       questions = [...questions, ...additionalQuestions];
     }
-
-    // Final shuffle
-    questions = questions.sort(() => Math.random() - 0.5);
 
     res.status(200).json({ success: true, data: { questions } });
   } catch (error) {

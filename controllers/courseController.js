@@ -192,7 +192,6 @@ const getCoursesV2 = async (req, res) => {
 
 const getCoursesByName = async (req, res) => {
   try {
-    console.log("get courses");
     const courseName = req.query.name;
     if (!courseName) {
       return res.status(400).json({ error: "Course name not provided" });
