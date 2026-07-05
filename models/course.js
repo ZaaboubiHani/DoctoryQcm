@@ -33,6 +33,10 @@ const courseSchema = new mongoose.Schema(
         },
       ],
     },
+    excludeFromRandom: {
+      type: Boolean,
+      default: false, // By default, courses ARE included in random selection
+    },
   },
   { versionKey: false, timestamps: true }
 );
