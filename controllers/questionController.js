@@ -401,8 +401,31 @@ const getRandomQuestionsFromModuleV2 = async (req, res) => {
       excludeFromRandom: { $ne: true }
     };
     if (year) {
+
+      switch (year) {
+        case '692ac3009b0bb7926894ee02':
+          courseFilter.years = { $in: ["Residency"] };
+          break;
+        case '692ac43c9b0bb7926894ee1c':
+          courseFilter.years = { $in: ["Fourth"] };
+          break;
+        case '692ac4469b0bb7926894ee1e':
+          courseFilter.years = { $in: ["Fifth"] };
+          break;
+        case '692ac4509b0bb7926894ee20':
+          courseFilter.years = { $in: ["Sixth"] };
+          break;
+        case '692ad748b495dbbf7d594457':
+          courseFilter.years = { $in: ["Constantine"] };
+          break;
+
+        default:
+          courseFilter.years = { $in: [year] };
+          break;
+      }
+
+
       // courseFilter.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Ensure course has the specified year
-      courseFilter.years = { $in: [year] }; // Ensure course has the specified year
     }
 
     const validCourses = await Course.find(courseFilter).select("_id");
@@ -413,6 +436,9 @@ const getRandomQuestionsFromModuleV2 = async (req, res) => {
       { $match: { module: new mongoose.Types.ObjectId(moduleId), course: { $in: validCourseIds } } },
       { $sample: { size: 40 } },
     ]);
+
+    console.log(questions);
+
 
     res.status(200).json({ success: true, data: { questions } });
   } catch (error) {
@@ -444,7 +470,27 @@ const getRandomQuestionsFromCategory = async (req, res) => {
     // Step 2: Find courses inside those modules, optionally filtered by year
     const courseFilter = { module: { $in: validModuleIds } };
     if (year) {
-      courseFilter.years = { $in: [year] };
+      switch (year) {
+        case '692ac3009b0bb7926894ee02':
+          courseFilter.years = { $in: ["Residency"] };
+          break;
+        case '692ac43c9b0bb7926894ee1c':
+          courseFilter.years = { $in: ["Fourth"] };
+          break;
+        case '692ac4469b0bb7926894ee1e':
+          courseFilter.years = { $in: ["Fifth"] };
+          break;
+        case '692ac4509b0bb7926894ee20':
+          courseFilter.years = { $in: ["Sixth"] };
+          break;
+        case '692ad748b495dbbf7d594457':
+          courseFilter.years = { $in: ["Constantine"] };
+          break;
+
+        default:
+          courseFilter.years = { $in: [year] };
+          break;
+      }
     }
 
     const validCourses = await Course.find(courseFilter).select("_id");
