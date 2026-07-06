@@ -141,8 +141,6 @@ const updateResidencyQuestion = async (req, res) => {
   }
 };
 
-
-
 const reorderQuestions = async (req, res) => {
   try {
     const questionsOrder = req.body;
