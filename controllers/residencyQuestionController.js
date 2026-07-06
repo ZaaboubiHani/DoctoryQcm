@@ -91,13 +91,11 @@ const getResidencyQuestionsV2 = async (req, res) => {
         const note = await Note.findOne({
           user: userId,
           residencyQuestion: question._id,
-        })
-          .select("note")
-          .lean();
+        }).lean();
 
         return {
           ...question,
-          note: note?.note || null,
+          note: note ?? null,
         };
       })
     );
