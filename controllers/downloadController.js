@@ -2,8 +2,8 @@ const path = require("path");
 
 const downloadApk = (req, res) => {
   try {
-    const filePath = path.join(__dirname, "..", "files", "dctory_qcm_1.3.0.apk");
-    res.download(filePath, "dctory_qcm_1.3.0.apk", (err) => {
+    const filePath = path.join(__dirname, "..", "files", "doctory_qcm-1.21.4.apk");
+    res.download(filePath, "doctory_qcm-1.21.4.apk", (err) => {
       if (err) {
         if (!res.headersSent) {
           res.status(500).json({
