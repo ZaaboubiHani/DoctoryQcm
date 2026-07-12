@@ -27,87 +27,9 @@ const registerUser = async (req, res) => {
       });
     }
 
-    user = new User({
-      ...userData,
-      passwordHash: bcrypt.hashSync(password, 10),
-    });
-
-    user = await user.save();
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "L'utilisateur ne peut pas être créé",
-      });
-    }
-    res
-      .status(200)
-      .json({ success: true, message: "Utilisateur enregistré avec succès" });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error });
-  }
-};
-
-const loginUser = async (req, res) => {
-  try {
-    const user = await User.findOne({
-      email: { $regex: new RegExp(`^${req.body.email}$`, "i") },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Email ou mot de passe incorrect",
-      });
-    }
-    if (user && bcrypt.compareSync(req.body.password, user.passwordHash)) {
-      try {
-        if (!user.isValidated) {
-          return res.status(400).json({
-            success: false,
-            message: "Votre compte n'est pas encore activé",
-          });
-        }
-        const token = generateToken(user.id, user.isAdmin);
-        res.status(200).json({
-          success: true,
-          data: user,
-          message: "Connexion réussie",
-          token: token,
-        });
-      } catch (tokenError) {
-        res
-          .status(500)
-          .send("Une erreur s'est produite lors de la génération du jeton.");
-      }
-    } else {
-      res.status(400).json({
-        success: false,
-        message: "Email ou mot de passe incorrect",
-      });
-    }
-  } catch (error) {
-    res
-      .status(500)
-      .send("Une erreur s'est produite lors de la recherche de l'utilisateur.");
-    console.log(error);
-  }
-};
-
-const updateUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "Identifiant utilisateur manquant",
-      });
-    }
-
-    let year = req.body.year;
+     let year = req.body.year;
     let yearId = req.body.yearId;
 
-    console.log("Received year:", req.body.year === '692ac4509b0bb7926894ee20');
 
     switch (req.body.year) {
       case '692ac3009b0bb7926894ee02':
@@ -187,8 +109,168 @@ const updateUser = async (req, res) => {
         break;
     }
 
-    console.log("Mapped year:", year);
-    console.log("Mapped yearId:", yearId);
+    user = new User({
+      ...userData,
+      year: year,
+      yearId: yearId,
+      passwordHash: bcrypt.hashSync(password, 10),
+    });
+
+    user = await user.save();
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "L'utilisateur ne peut pas être créé",
+      });
+    }
+    res
+      .status(200)
+      .json({ success: true, message: "Utilisateur enregistré avec succès" });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    res.status(500).json({ success: false, error: error });
+  }
+};
+
+const loginUser = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      email: { $regex: new RegExp(`^${req.body.email}$`, "i") },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Email ou mot de passe incorrect",
+      });
+    }
+    if (user && bcrypt.compareSync(req.body.password, user.passwordHash)) {
+      try {
+        if (!user.isValidated) {
+          return res.status(400).json({
+            success: false,
+            message: "Votre compte n'est pas encore activé",
+          });
+        }
+        const token = generateToken(user.id, user.isAdmin);
+        res.status(200).json({
+          success: true,
+          data: user,
+          message: "Connexion réussie",
+          token: token,
+        });
+      } catch (tokenError) {
+        res
+          .status(500)
+          .send("Une erreur s'est produite lors de la génération du jeton.");
+      }
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "Email ou mot de passe incorrect",
+      });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .send("Une erreur s'est produite lors de la recherche de l'utilisateur.");
+    console.log(error);
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Identifiant utilisateur manquant",
+      });
+    }
+
+    let year = req.body.year;
+    let yearId = req.body.yearId;
+
+
+    switch (req.body.year) {
+      case '692ac3009b0bb7926894ee02':
+        year = "Residency";
+        yearId = "692ac3009b0bb7926894ee02";
+        break;
+      case '692ac43c9b0bb7926894ee1c':
+        year = "Fourth";
+        yearId = "692ac43c9b0bb7926894ee1c";
+        break;
+      case '692ac4469b0bb7926894ee1e':
+        year = "Fifth";
+        yearId = "692ac4469b0bb7926894ee1e";
+        break;
+      case '692ac4509b0bb7926894ee20':
+        year = "Sixth";
+        yearId = "692ac4509b0bb7926894ee20";
+        break;
+      case '692ad748b495dbbf7d594457':
+        year = "Constantine";
+        yearId = "692ad748b495dbbf7d594457";
+        break;
+
+        default:
+        break;
+    }
+
+    switch (req.body.yearId) {
+      case 'Residency':
+        yearId = "692ac3009b0bb7926894ee02";
+        year = "Residency";
+        break;
+      case 'Fourth':
+        yearId = "692ac43c9b0bb7926894ee1c";
+        year = "Fourth";
+        break;
+      case 'Fifth':
+        yearId = "692ac4469b0bb7926894ee1e";
+        year = "Fifth";
+        break;
+      case 'Sixth':
+        yearId = "692ac4509b0bb7926894ee20";
+        year = "Sixth";
+        break;
+      case 'Constantine':
+        yearId = "692ad748b495dbbf7d594457";
+        year = "Constantine";
+        break;
+
+        default:
+        break;
+    }
+
+    switch (req.body.year) {
+      case 'Residency':
+        yearId = "692ac3009b0bb7926894ee02";
+        year = "Residency";
+        break;
+      case 'Fourth':
+        yearId = "692ac43c9b0bb7926894ee1c";
+        year = "Fourth";
+        break;
+      case 'Fifth':
+        yearId = "692ac4469b0bb7926894ee1e";
+        year = "Fifth";
+        break;
+      case 'Sixth':
+        yearId = "692ac4509b0bb7926894ee20";
+        year = "Sixth";
+        break;
+      case 'Constantine':
+        yearId = "692ad748b495dbbf7d594457";
+        year = "Constantine";
+        break;
+
+        default:
+        break;
+    }
+
 
     let userData = {
       email: req.body.email,
