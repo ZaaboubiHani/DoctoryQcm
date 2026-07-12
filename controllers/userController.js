@@ -107,21 +107,28 @@ const updateUser = async (req, res) => {
     let year = req.body.year;
     let yearId = req.body.yearId;
 
+    console.log("Received year:", req.body.year === '692ac4509b0bb7926894ee20');
+
     switch (req.body.year) {
       case '692ac3009b0bb7926894ee02':
         year = "Residency";
+        yearId = "692ac3009b0bb7926894ee02";
         break;
       case '692ac43c9b0bb7926894ee1c':
         year = "Fourth";
+        yearId = "692ac43c9b0bb7926894ee1c";
         break;
       case '692ac4469b0bb7926894ee1e':
         year = "Fifth";
+        yearId = "692ac4469b0bb7926894ee1e";
         break;
       case '692ac4509b0bb7926894ee20':
         year = "Sixth";
+        yearId = "692ac4509b0bb7926894ee20";
         break;
       case '692ad748b495dbbf7d594457':
         year = "Constantine";
+        yearId = "692ad748b495dbbf7d594457";
         break;
 
         default:
@@ -131,23 +138,57 @@ const updateUser = async (req, res) => {
     switch (req.body.yearId) {
       case 'Residency':
         yearId = "692ac3009b0bb7926894ee02";
+        year = "Residency";
         break;
       case 'Fourth':
         yearId = "692ac43c9b0bb7926894ee1c";
+        year = "Fourth";
         break;
       case 'Fifth':
         yearId = "692ac4469b0bb7926894ee1e";
+        year = "Fifth";
         break;
       case 'Sixth':
         yearId = "692ac4509b0bb7926894ee20";
+        year = "Sixth";
         break;
       case 'Constantine':
         yearId = "692ad748b495dbbf7d594457";
+        year = "Constantine";
         break;
 
         default:
         break;
     }
+
+    switch (req.body.year) {
+      case 'Residency':
+        yearId = "692ac3009b0bb7926894ee02";
+        year = "Residency";
+        break;
+      case 'Fourth':
+        yearId = "692ac43c9b0bb7926894ee1c";
+        year = "Fourth";
+        break;
+      case 'Fifth':
+        yearId = "692ac4469b0bb7926894ee1e";
+        year = "Fifth";
+        break;
+      case 'Sixth':
+        yearId = "692ac4509b0bb7926894ee20";
+        year = "Sixth";
+        break;
+      case 'Constantine':
+        yearId = "692ad748b495dbbf7d594457";
+        year = "Constantine";
+        break;
+
+        default:
+        break;
+    }
+
+    console.log("Mapped year:", year);
+    console.log("Mapped yearId:", yearId);
 
     let userData = {
       email: req.body.email,
