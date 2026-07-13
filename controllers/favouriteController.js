@@ -232,6 +232,7 @@ const getFavouriteModules = async (req, res) => {
       },
     ]);
 
+
     res.status(200).json(favouriteModules);
   } catch (error) {
     console.log(error);
@@ -246,7 +247,36 @@ const getFavouriteModulesV2 = async (req, res) => {
       ? new mongoose.Types.ObjectId(req.query.category)
       : null;
     // const year = new mongoose.Types.ObjectId(req.query.year); // Year is a string, and "years" is an array
-    const year = req.query.year; // Year is a string, and "years" is an array
+    let year = undefined; // Year is a string, and "years" is an array
+    let yearId = undefined; // Year is a string, and "years" is an array
+    switch (req.query.year) {
+       case '692ac3009b0bb7926894ee02':
+          year = "Residency";
+          yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+          break;
+        case '692ac43c9b0bb7926894ee1c':
+          year = "Fourth";
+          yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+          break;
+        case '692ac4469b0bb7926894ee1e':
+          year = "Fifth";
+          yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+          break;
+        case '692ac4509b0bb7926894ee20':
+          year = "Sixth";
+          yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+          break;
+        case '692ad748b495dbbf7d594457':
+          year = "Constantine";
+          yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+          break;
+
+        default:
+          year = req.query.year;
+          yearId = new mongoose.Types.ObjectId(req.query.year);
+          break;
+      
+    }
 
     const matchStage = {
       user: userId,
@@ -290,7 +320,7 @@ const getFavouriteModulesV2 = async (req, res) => {
     if (year) {
       pipeline.push({
         $match: {
-          // "module.yearIds": { $in: [year] },
+          "module.yearIds": { $in: [yearId] },
           "module.years": { $in: [year] },
         },
       });
