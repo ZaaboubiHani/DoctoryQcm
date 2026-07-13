@@ -400,7 +400,35 @@ const getFavouriteCoursesV2 = async (req, res) => {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
     const moduleId = new mongoose.Types.ObjectId(req.query.module);
     // const year =new mongoose.Types.ObjectId(req.query.year); // Year is a string, and "years" is an array
-    const year = req.query.year; // Year is a string, and "years" is an array
+    let year = undefined; // Year is a string, and "years" is an array
+    let yearId = undefined;
+    switch (req.query.year) {
+      case '692ac3009b0bb7926894ee02':
+        year = "Residency";
+        yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+        break;
+      case '692ac43c9b0bb7926894ee1c':
+        year = "Fourth";
+        yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+        break;
+      case '692ac4469b0bb7926894ee1e':
+        year = "Fifth";
+        yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+        break;
+      case '692ac4509b0bb7926894ee20':
+        year = "Sixth";
+        yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+        break;
+      case '692ad748b495dbbf7d594457':
+        year = "Constantine";
+        yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+        break;
+      default:
+        year = req.query.year;
+        yearId = new mongoose.Types.ObjectId(req.query.year);
+        break;
+    }
+
     const baseUrl = process.env.BASE_URL;
     const pipeline = [
       {
@@ -451,7 +479,7 @@ const getFavouriteCoursesV2 = async (req, res) => {
     // Apply year filter if provided
     if (year) {
       pipeline.push({
-        // $match: { "course.yearIds": { $in: [year] } },
+        $match: { "course.yearIds": { $in: [year] } },
         $match: { "course.years": { $in: [year] } },
       });
     }
