@@ -488,10 +488,11 @@ const getModulesStatsV2 = async (req, res) => {
     const userId = new mongoose.Types.ObjectId(req.user.userId);
     const user = await User.findById(userId);
     // const userYear = user.yearId;
-    const userYear = user.year;
+    // const userYear = user.year;
+    
 
     // const validCourses = await Course.find({ yearIds: { $in: [userYear] } }).select("_id");
-    const validCourses = await Course.find({ years: { $in: [userYear] } }).select("_id");
+    const validCourses = await Course.find({ }).select("_id");
     const validCourseIds = validCourses.map((c) => c._id);
     let matchStage = {};
     let query = {};
@@ -501,10 +502,10 @@ const getModulesStatsV2 = async (req, res) => {
     }
 
     const year = req.query.year;
-    if (year) {
-      // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if the year exists in the years array
-      query.years = { $in: [year] }; // Check if the year exists in the years array
-    }
+    // if (year) {
+    //   // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if the year exists in the years array
+    //   query.years = { $in: [year] }; // Check if the year exists in the years array
+    // }
 
     const answersPerModule = await Module.aggregate([
       {
