@@ -489,10 +489,10 @@ const getModulesStatsV2 = async (req, res) => {
     const user = await User.findById(userId);
     // const userYear = user.yearId;
     // const userYear = user.year;
-    
+
 
     // const validCourses = await Course.find({ yearIds: { $in: [userYear] } }).select("_id");
-    const validCourses = await Course.find({ }).select("_id");
+    const validCourses = await Course.find({}).select("_id");
     const validCourseIds = validCourses.map((c) => c._id);
     let matchStage = {};
     let query = {};
@@ -501,11 +501,59 @@ const getModulesStatsV2 = async (req, res) => {
       matchStage.category = new mongoose.Types.ObjectId(req.query.category);
     }
 
-    const year = req.query.year;
-    // if (year) {
-    //   // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if the year exists in the years array
-    //   query.years = { $in: [year] }; // Check if the year exists in the years array
-    // }
+    let year = undefined; // Year is a string, and "years" is an array
+    let yearId = undefined;
+    switch (req.query.year) {
+      case '692ac3009b0bb7926894ee02':
+        year = "Residency";
+        yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+        break;
+      case '692ac43c9b0bb7926894ee1c':
+        year = "Fourth";
+        yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+        break;
+      case '692ac4469b0bb7926894ee1e':
+        year = "Fifth";
+        yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+        break;
+      case '692ac4509b0bb7926894ee20':
+        year = "Sixth";
+        yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+        break;
+      case '692ad748b495dbbf7d594457':
+        year = "Constantine";
+        yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+        break;
+      case "Residency":
+        year = "Residency";
+        yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+        break;
+      case "Fourth":
+        year = "Fourth";
+        yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+        break;
+      case "Fifth":
+        year = "Fifth";
+        yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+        break;
+      case "Sixth":
+        year = "Sixth";
+        yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+        break;
+      case "Constantine":
+        year = "Constantine";
+        yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+        break;
+      default:
+        year = req.query.year;
+        yearId = new mongoose.Types.ObjectId(req.query.year);
+        break;
+    }
+
+    if (year) {
+      query.yearIds = { $in: [yearId] }; // Check if the year exists in the years array
+      query.years = { $in: [year] }; // Check if the year exists in the years array
+    }
 
     const answersPerModule = await Module.aggregate([
       {
@@ -524,7 +572,7 @@ const getModulesStatsV2 = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                   
+
                     { $in: ["$course", validCourseIds] },
                   ],
                 },
@@ -701,9 +749,57 @@ const getCoursesStatsV2 = async (req, res) => {
       matchStage.module = new mongoose.Types.ObjectId(req.query.module);
     }
 
-    const year = req.query.year;
+    let year = undefined; // Year is a string, and "years" is an array
+    let yearId = undefined;
+    switch (req.query.year) {
+      case '692ac3009b0bb7926894ee02':
+        year = "Residency";
+        yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+        break;
+      case '692ac43c9b0bb7926894ee1c':
+        year = "Fourth";
+        yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+        break;
+      case '692ac4469b0bb7926894ee1e':
+        year = "Fifth";
+        yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+        break;
+      case '692ac4509b0bb7926894ee20':
+        year = "Sixth";
+        yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+        break;
+      case '692ad748b495dbbf7d594457':
+        year = "Constantine";
+        yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+        break;
+      case "Residency":
+        year = "Residency";
+        yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+        break;
+      case "Fourth":
+        year = "Fourth";
+        yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+        break;
+      case "Fifth":
+        year = "Fifth";
+        yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+        break;
+      case "Sixth":
+        year = "Sixth";
+        yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+        break;
+      case "Constantine":
+        year = "Constantine";
+        yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+        break;
+      default:
+        year = req.query.year;
+        yearId = new mongoose.Types.ObjectId(req.query.year);
+        break;
+    }
+
     if (year) {
-      // query.yearIds = { $in: [new mongoose.Types.ObjectId(year)] }; // Check if the year exists in the years array
+      query.yearIds = { $in: [yearId] }; // Check if the year exists in the years array
       query.years = { $in: [year] }; // Check if the year exists in the years array
     }
 

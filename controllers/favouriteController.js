@@ -250,32 +250,52 @@ const getFavouriteModulesV2 = async (req, res) => {
     let year = undefined; // Year is a string, and "years" is an array
     let yearId = undefined; // Year is a string, and "years" is an array
     switch (req.query.year) {
-       case '692ac3009b0bb7926894ee02':
-          year = "Residency";
-          yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
-          break;
-        case '692ac43c9b0bb7926894ee1c':
-          year = "Fourth";
-          yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
-          break;
-        case '692ac4469b0bb7926894ee1e':
-          year = "Fifth";
-          yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
-          break;
-        case '692ac4509b0bb7926894ee20':
-          year = "Sixth";
-          yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
-          break;
-        case '692ad748b495dbbf7d594457':
-          year = "Constantine";
-          yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
-          break;
+      case '692ac3009b0bb7926894ee02':
+        year = "Residency";
+        yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+        break;
+      case '692ac43c9b0bb7926894ee1c':
+        year = "Fourth";
+        yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+        break;
+      case '692ac4469b0bb7926894ee1e':
+        year = "Fifth";
+        yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+        break;
+      case '692ac4509b0bb7926894ee20':
+        year = "Sixth";
+        yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+        break;
+      case '692ad748b495dbbf7d594457':
+        year = "Constantine";
+        yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+        break;
+      case "Residency":
+        year = "Residency";
+        yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+        break;
+      case "Fourth":
+        year = "Fourth";
+        yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+        break;
+      case "Fifth":
+        year = "Fifth";
+        yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+        break;
+      case "Sixth":
+        year = "Sixth";
+        yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+        break;
+      case "Constantine":
+        year = "Constantine";
+        yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+        break;
 
-        default:
-          year = req.query.year;
-          yearId = new mongoose.Types.ObjectId(req.query.year);
-          break;
-      
+
+      default:
+        year = req.query.year;
+        yearId = new mongoose.Types.ObjectId(req.query.year);
+        break;
     }
 
     const matchStage = {
@@ -420,6 +440,26 @@ const getFavouriteCoursesV2 = async (req, res) => {
         yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
         break;
       case '692ad748b495dbbf7d594457':
+        year = "Constantine";
+        yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
+        break;
+      case "Residency":
+        year = "Residency";
+        yearId = new mongoose.Types.ObjectId('692ac3009b0bb7926894ee02');
+        break;
+      case "Fourth":
+        year = "Fourth";
+        yearId = new mongoose.Types.ObjectId('692ac43c9b0bb7926894ee1c');
+        break;
+      case "Fifth":
+        year = "Fifth";
+        yearId = new mongoose.Types.ObjectId('692ac4469b0bb7926894ee1e');
+        break;
+      case "Sixth":
+        year = "Sixth";
+        yearId = new mongoose.Types.ObjectId('692ac4509b0bb7926894ee20');
+        break;
+      case "Constantine":
         year = "Constantine";
         yearId = new mongoose.Types.ObjectId('692ad748b495dbbf7d594457');
         break;
